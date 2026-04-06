@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Show Up — Build Your Booking System</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,700&family=Cabinet+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  // Stripe publishable key will be injected by Netlify
+  window.STRIPE_PUBLISHABLE_KEY = '{{STRIPE_PUBLISHABLE_KEY}}';
+</script>
 <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.9/dist/heic2any.min.js"></script>
 <style>
 :root {
@@ -618,23 +623,8 @@ input[type="color"].swatch{padding:0;overflow:hidden;}
     <div class="payment-form">
       <span class="payment-form-lbl">Payment Details</span>
       <div class="stripe-box">
-        <div class="stripe-field">
-          <label>Card Number</label>
-          <input type="text" id="card-number" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCard(this)" autocomplete="cc-number">
-        </div>
-        <div class="stripe-2col">
-          <div class="stripe-field">
-            <label>Expiry Date</label>
-            <input type="text" id="card-expiry" placeholder="MM / YY" maxlength="7" oninput="formatExpiry(this)" autocomplete="cc-exp">
-          </div>
-          <div class="stripe-field">
-            <label>CVC</label>
-            <input type="text" id="card-cvc" placeholder="123" maxlength="4" autocomplete="cc-csc">
-          </div>
-        </div>
-        <div class="stripe-field" style="margin-top:12px;">
-          <label>Name on Card</label>
-          <input type="text" id="card-name" placeholder="Sarah Johnson" autocomplete="cc-name">
+        <div id="card-element">
+          <!-- Stripe Elements will be inserted here -->
         </div>
         <div id="card-errors" style="color:#ff4d4d;font-size:0.78rem;margin-top:8px;min-height:18px;"></div>
       </div>
@@ -1077,6 +1067,23 @@ function openPayment(){
   selectPlan('monthly');
   document.getElementById('paymentModal').classList.add('show');
   document.body.style.overflow = 'hidden';
+  
+  // Initialize Stripe Elements
+  const stripe = Stripe(window.STRIPE_PUBLISHABLE_KEY || 'pk_test_...');
+  const elements = stripe.elements();
+  const cardElement = elements.create('card', {
+    style: {
+      base: {
+        fontSize: '16px',
+        color: '#424770',
+        '::placeholder': {
+          color: '#aab7c4',
+        },
+      },
+    },
+  });
+  cardElement.mount('#card-element');
+
   // Reset form
   ['card-number','card-expiry','card-cvc','card-name'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('card-errors').textContent = '';
@@ -1100,27 +1107,70 @@ function selectPlan(p){
 function formatCard(el){let v=el.value.replace(/\D/g,'').slice(0,16);el.value=v.replace(/(.{4})/g,'$1 ').trim();}
 function formatExpiry(el){let v=el.value.replace(/\D/g,'').slice(0,4);if(v.length>=3)v=v.slice(0,2)+' / '+v.slice(2);el.value=v;}
 
-function processPayment(){
-  const num = document.getElementById('card-number').value.replace(/\s/g,'');
-  const exp = document.getElementById('card-expiry').value;
-  const cvc = document.getElementById('card-cvc').value;
-  const name = document.getElementById('card-name').value.trim();
+async function processPayment(){
   const errs = document.getElementById('card-errors');
   errs.textContent = '';
-  if(num.length < 16){ errs.textContent = 'Please enter a valid 16-digit card number.'; return; }
-  if(!exp.includes('/')){ errs.textContent = 'Please enter a valid expiry date.'; return; }
-  if(cvc.length < 3){ errs.textContent = 'Please enter a valid CVC.'; return; }
-  if(!name){ errs.textContent = 'Please enter the name on your card.'; return; }
+  
   const btn = document.getElementById('payBtn');
   btn.disabled = true;
   document.getElementById('pay-btn-text').style.display = 'none';
   const sp = document.getElementById('spinner');
   sp.style.display = 'block';
-  setTimeout(() => {
+
+  try {
+    // 1. Create subscription + get Stripe client_secret
+    const res = await fetch('/api/create-subscription', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        plan: currentPlan,
+        bizData: biz,
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    // 2. Use existing Stripe Elements
+    const stripe = Stripe(window.STRIPE_PUBLISHABLE_KEY || 'pk_test_...');
+    const elements = stripe.elements();
+    const cardElement = elements.getElement('card');
+    
+    // 3. Confirm payment with Stripe.js
+    const { error, paymentIntent } = await stripe.confirmCardPayment(data.clientSecret, {
+      payment_method: {
+        card: cardElement,
+        billing_details: { 
+          name: biz.name, 
+          email: biz.email,
+          address: {
+            line1: biz.address,
+            city: 'City', // You can add city field to form
+            state: 'State', // You can add state field to form
+            postal_code: 'Postcode', // You can add postcode field to form
+            country: 'GB'
+          }
+        }
+      }
+    });
+    
+    if (error) throw new Error(error.message);
+
+    // 4. Show success
     document.getElementById('paymentModal').classList.remove('show');
     document.getElementById('successScreen').classList.add('show');
     document.body.style.overflow = 'hidden';
-  }, 1800);
+    
+    // Update success URL with real slug from response
+    if (data.slug) {
+      document.getElementById('successUrl').textContent = window.location.origin + '/book/' + data.slug;
+    }
+
+  } catch (e) {
+    errs.textContent = e.message;
+    btn.disabled = false;
+    document.getElementById('pay-btn-text').style.display = 'inline';
+    sp.style.display = 'none';
+  }
 }
 
 /* HELPERS */
