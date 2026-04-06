@@ -880,7 +880,7 @@ function validateStep5(){
 /* REVIEW */
 function slug(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');}
 function buildReview(){
-  const url='showup.io/book/'+slug(biz.name);
+  const url=window.location.origin+'/book/'+slug(biz.name);
   document.getElementById('preview-url').textContent=url;
   document.getElementById('successUrl').textContent=url;
   const openDays=DAYS.filter(d=>biz.hours[d].o);
@@ -1012,7 +1012,7 @@ function openDashboardPreview(){
       </div>
       <!-- Booking URL -->
       <div style="background:rgba(45,142,255,0.06);border-bottom:1px solid rgba(45,142,255,0.12);padding:10px 20px;display:flex;align-items:center;gap:8px;">
-        <span style="font-size:0.72rem;color:#2D8EFF;font-weight:700;">🔗 showup.io/book/${slug(biz.name)}</span>
+        <span style="font-size:0.72rem;color:#2D8EFF;font-weight:700;">🔗 ${window.location.origin+'/book/'+slug(biz.name)}</span>
         <span style="font-size:0.7rem;color:#aaa;margin-left:auto;">Share this link</span>
       </div>
       <!-- Stats row -->
