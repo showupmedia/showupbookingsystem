@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Show Up — Build Your Booking System</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,700&family=Cabinet+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.9/dist/heic2any.min.js"></script>
 <style>
 :root {
   --dark: #0a0a0a;
@@ -325,11 +326,11 @@ input[type="color"].swatch{padding:0;overflow:hidden;}
       <div class="field">
         <label>Business Logo <span class="optional-tag">(optional)</span></label>
         <div class="upload-zone" onclick="document.getElementById('logo-upload').click()">
-          <input type="file" id="logo-upload" accept="image/*" onchange="previewLogo(this)">
+          <input type="file" id="logo-upload" accept="image/*,.heic" onchange="previewLogo(this)">
           <img class="upload-preview" id="logo-preview" alt="Logo">
           <div id="upload-placeholder">
             <div class="upload-icon">📷</div>
-            <div class="upload-lbl">Click to upload your logo <strong>or drag & drop</strong></div>
+            <div class="upload-lbl">Click to upload your logo <strong>or drag & drop</strong><br><small style="color:var(--muted);font-size:0.75rem;">Supports JPG, PNG, HEIC (iPhone photos)</small></div>
           </div>
         </div>
       </div>
@@ -720,16 +721,52 @@ function selectColor(el){
 }
 
 /* LOGO */
-function previewLogo(input){
+async function previewLogo(input){
   if(input.files&&input.files[0]){
-    const r=new FileReader();
-    r.onload=e=>{
-      const img=document.getElementById('logo-preview');
-      img.src=e.target.result; img.style.display='block';
-      document.getElementById('upload-placeholder').style.display='none';
-      biz.logo=e.target.result;
-    };
-    r.readAsDataURL(input.files[0]);
+    const file = input.files[0];
+    const uploadPlaceholder = document.getElementById('upload-placeholder');
+    const logoPreview = document.getElementById('logo-preview');
+    
+    // Show loading state
+    if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
+      uploadPlaceholder.innerHTML = '<div class="upload-icon">⏳</div><div class="upload-lbl">Converting HEIC file...</div>';
+      
+      try {
+        // Convert HEIC to JPEG
+        const result = await heic2any({
+          blob: file,
+          toType: 'image/jpeg',
+          quality: 0.8
+        });
+        
+        // Create data URL from converted blob
+        const reader = new FileReader();
+        reader.onload = e => {
+          logoPreview.src = e.target.result;
+          logoPreview.style.display = 'block';
+          uploadPlaceholder.style.display = 'none';
+          biz.logo = e.target.result;
+        };
+        reader.readAsDataURL(result);
+        
+      } catch (error) {
+        console.error('HEIC conversion failed:', error);
+        uploadPlaceholder.innerHTML = '<div class="upload-icon">❌</div><div class="upload-lbl">Failed to convert HEIC. Try a JPG/PNG file.</div>';
+        setTimeout(() => {
+          uploadPlaceholder.innerHTML = '<div class="upload-icon">📷</div><div class="upload-lbl">Click to upload your logo <strong>or drag & drop</strong></div>';
+        }, 3000);
+      }
+    } else {
+      // Handle regular image files
+      const r = new FileReader();
+      r.onload = e => {
+        logoPreview.src = e.target.result;
+        logoPreview.style.display = 'block';
+        uploadPlaceholder.style.display = 'none';
+        biz.logo = e.target.result;
+      };
+      r.readAsDataURL(file);
+    }
   }
 }
 
