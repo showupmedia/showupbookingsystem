@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Show Up — Your Booking System, Live in 5 Minutes</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,700&family=Cabinet+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --dark: #000000;
+  --white: #FFFFFF;
+  --blue: #2D8EFF;
+  --blue-dim: rgba(45,142,255,0.12);
+  --blue-mid: rgba(45,142,255,0.25);
+  --muted: #A0A0A0;
+  --muted-mid: #C0C0C0;
+  --card: #1A1A1A;
+  --card-border: rgba(255,255,255,0.1);
+  --card-hover: rgba(255,255,255,0.08);
+  --grid: rgba(255,255,255,0.05);
+  --accent: var(--blue);
+  --accent-dim: var(--blue-dim);
+  --border: var(--card-border);
+  --border-dark: rgba(255,255,255,0.1);
+  --paper: var(--dark);
+  --cream: var(--card);
+  --ink: var(--white);
+  --radius: 4px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.8);
+  --shadow-lg: 0 12px 60px rgba(0,0,0,0.9);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  background: var(--dark);
+  color: var(--white);
+  overflow-x: hidden;
+}
+
+/* ── NOISE TEXTURE ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none;
+  opacity: 1;
+  background-image: linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 6%;
+  background: rgba(0,0,0,0.9);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--card-border);
+}
+.logo {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-size: 1.4rem;
+  color: var(--white);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+.logo .up { color: var(--accent); }
+.logo .badge {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  background: var(--white);
+  color: var(--dark);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.nav-links { display: flex; gap: 28px; list-style: none; }
+.nav-links a { color: var(--muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color .2s; }
+.nav-links a:hover { color: var(--white); }
+.nav-cta {
+  background: var(--blue);
+  color: var(--dark);
+  padding: 10px 24px;
+  border-radius: var(--radius);
+  font-weight: 700;
+  font-size: 0.88rem;
+  text-decoration: none;
+  transition: all .2s;
+  letter-spacing: 0.01em;
+}
+.nav-cta:hover { background: #1A7AEE; transform: translateY(-2px); }
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  padding: 140px 6% 80px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.hero-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 8px 16px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: 28px;
+  box-shadow: var(--shadow);
+  animation: slideDown .5s ease both;
+}
+.hero-pill::before { content: '●'; animation: blink 2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+@keyframes slideDown { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
+
+.hero h1 {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-size: clamp(2.8rem, 5.5vw, 5rem);
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  margin-bottom: 24px;
+  animation: slideUp .5s .1s ease both;
+}
+.hero h1 em { font-style: italic; color: var(--blue); }
+.hero h1 .strike { text-decoration: line-through; color: var(--muted); }
+
+.hero-sub {
+  font-size: 1.1rem;
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 36px;
+  max-width: 460px;
+  animation: slideUp .5s .2s ease both;
+}
+@keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+.hero-actions {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 48px;
+  animation: slideUp .5s .3s ease both;
+}
+.btn-hero {
+  background: var(--blue);
+  color: var(--dark);
+  padding: 16px 32px;
+  border-radius: var(--radius);
+  font-weight: 800;
+  font-size: 1rem;
+  text-decoration: none;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: all .25s;
+  letter-spacing: -0.01em;
+}
+.btn-hero:hover { background: #1A7AEE; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(45,142,255,0.3); }
+.btn-ghost {
+  background: transparent;
+  color: var(--white);
+  padding: 16px 28px;
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  border: 1.5px solid var(--card-border);
+  transition: all .2s;
+}
+.btn-ghost:hover { border-color: var(--white); }
+
+.hero-stats {
+  display: flex; gap: 32px; flex-wrap: wrap;
+  animation: slideUp .5s .4s ease both;
+}
+.stat-num {
+  font-family: 'Fraunces', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--white);
+}
+.stat-num .accent { color: var(--blue); }
+.stat-label { font-size: 0.78rem; color: var(--muted); margin-top: 4px; font-weight: 500; }
+
+/* ── HERO VISUAL ── */
+.hero-visual {
+  position: relative;
+  animation: slideUp .5s .2s ease both;
+}
+.mockup-stack {
+  position: relative;
+  height: 520px;
+}
+.mockup-card {
+  position: absolute;
+  background: var(--card);
+  border: 1px solid var(--border-dark);
+  border-radius: 20px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  transition: transform .3s;
+}
+.mockup-card:hover { transform: translateY(-4px) !important; }
+.mockup-main {
+  width: 340px; right: 0; top: 0;
+  transform: rotate(1deg);
+}
+.mockup-card-2 {
+  width: 260px; left: 0; top: 80px;
+  transform: rotate(-2deg);
+}
+.mockup-card-3 {
+  width: 200px; left: 30px; bottom: 20px;
+  transform: rotate(1.5deg);
+}
+
+.m-header {
+  background: var(--ink);
+  padding: 14px 18px;
+  display: flex; align-items: center; gap: 8px;
+}
+.m-dot { width: 8px; height: 8px; border-radius: 50%; }
+.m-dot:nth-child(1) { background: #ff5f57; }
+.m-dot:nth-child(2) { background: #febc2e; }
+.m-dot:nth-child(3) { background: #28c840; }
+.m-url {
+  flex: 1; background: rgba(255,255,255,0.1); border-radius: 4px;
+  padding: 4px 10px; font-size: 0.65rem; color: rgba(255,255,255,0.5);
+  margin-left: 8px;
+}
+.m-body { padding: 20px; }
+.m-biz-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.m-logo-sq {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: var(--accent); display: flex; align-items: center; justify-content: center;
+  font-family: 'Fraunces', serif; font-weight: 900; font-size: 0.9rem; color: white;
+}
+.m-biz-name { font-weight: 800; font-size: 0.88rem; }
+.m-biz-sub { font-size: 0.7rem; color: var(--muted); }
+.m-svc-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--paper); border-radius: 10px; padding: 10px 12px;
+  margin-bottom: 6px;
+}
+.m-svc-name { font-size: 0.78rem; font-weight: 700; }
+.m-svc-dur { font-size: 0.65rem; color: var(--muted); }
+.m-svc-price { font-family: 'Fraunces', serif; font-size: 0.9rem; font-weight: 700; color: var(--accent); }
+.m-book-btn {
+  width: 100%; background: var(--ink); color: var(--paper);
+  border: none; padding: 10px; border-radius: 8px;
+  font-weight: 700; font-size: 0.78rem; margin-top: 10px;
+  font-family: 'Cabinet Grotesk', sans-serif;
+}
+
+.card2-body { padding: 16px; }
+.card2-title { font-family: 'Fraunces', serif; font-weight: 900; font-size: 1.1rem; margin-bottom: 12px; }
+.stat-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.mini-stat {
+  flex: 1; background: var(--paper); border-radius: 8px; padding: 10px;
+  text-align: center;
+}
+.mini-stat-num { font-family: 'Fraunces', serif; font-size: 1.2rem; font-weight: 700; }
+.mini-stat-lbl { font-size: 0.6rem; color: var(--muted); }
+.bar-row { display: flex; align-items: flex-end; gap: 4px; height: 50px; margin-top: 8px; }
+.bar-b { flex: 1; border-radius: 4px 4px 0 0; background: var(--paper); }
+.bar-b.hi { background: var(--ink); }
+
+.card3-body { padding: 14px; }
+.confirm-check { font-size: 1.8rem; text-align: center; margin-bottom: 8px; }
+.confirm-label { font-family: 'Fraunces', serif; font-size: 0.9rem; font-weight: 700; text-align: center; margin-bottom: 4px; }
+.confirm-sub { font-size: 0.65rem; color: var(--muted); text-align: center; line-height: 1.4; }
+.confirm-badge {
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  background: rgba(0,196,122,0.1); color: var(--green);
+  border: 1px solid rgba(0,196,122,0.3);
+  border-radius: 999px; padding: 5px 10px;
+  font-size: 0.65rem; font-weight: 700; margin-top: 8px;
+}
+
+/* ── TICKER ── */
+.ticker-wrap {
+  background: var(--ink);
+  color: var(--paper);
+  overflow: hidden;
+  padding: 14px 0;
+  position: relative; z-index: 1;
+}
+.ticker {
+  display: flex; gap: 0;
+  animation: tick 22s linear infinite;
+  white-space: nowrap;
+}
+@keyframes tick { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+.ticker-item {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 0 40px;
+  border-right: 1px solid rgba(255,255,255,0.1);
+  font-size: 0.82rem;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.ticker-item .t-accent { color: var(--gold); }
+
+/* ── SECTION BASE ── */
+.section { padding: 100px 6%; position: relative; z-index: 1; }
+.section-inner { max-width: 1200px; margin: 0 auto; }
+.eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.section-h {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-size: clamp(2.2rem, 4vw, 3.5rem);
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  margin-bottom: 16px;
+}
+.section-h em { font-style: italic; color: var(--accent); }
+.section-sub { font-size: 1rem; color: var(--muted); line-height: 1.6; max-width: 520px; }
+
+/* ── HOW IT WORKS ── */
+.how-section { background: var(--cream); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0;
+  margin-top: 56px;
+  background: var(--border);
+  border: 1px solid var(--border-dark);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.step-item {
+  background: var(--card);
+  padding: 36px 28px;
+  transition: background .2s;
+  position: relative;
+}
+.step-item:hover { background: var(--paper); }
+.step-n {
+  font-family: 'Fraunces', serif;
+  font-size: 3.5rem;
+  font-weight: 900;
+  color: var(--paper2);
+  line-height: 1;
+  margin-bottom: 16px;
+}
+.step-icon { font-size: 1.6rem; margin-bottom: 12px; display: block; }
+.step-h { font-weight: 800; font-size: 0.95rem; margin-bottom: 8px; }
+.step-p { font-size: 0.83rem; color: var(--muted); line-height: 1.5; }
+.step-time {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(0,196,122,0.1); color: var(--green);
+  border: 1px solid rgba(0,196,122,0.25);
+  padding: 4px 10px; border-radius: 999px;
+  font-size: 0.7rem; font-weight: 700; margin-top: 12px;
+}
+
+/* ── CRM ACCESS ── */
+.crm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:24px;}
+.crm-card{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:24px;text-decoration:none;color:var(--white);transition:all .2s;display:block;}
+.crm-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--blue);}
+.crm-icon{width:48px;height:48px;background:var(--blue-dim);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:12px;}
+.crm-title{font-weight:700;font-size:1.1rem;margin-bottom:6px;}
+.crm-desc{font-size:0.85rem;color:var(--muted);line-height:1.4;}
+
+/* ── INTEGRATION ── */
+.integration-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:20px;}
+.integration-item{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:20px;text-align:center;}
+.integration-icon{width:56px;height:56px;background:var(--blue-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin:0 auto 16px;}
+.integration-title{font-weight:700;font-size:1rem;margin-bottom:8px;}
+.integration-desc{font-size:0.8rem;color:var(--muted);line-height:1.4;}
+
+/* ── PRICING ── */
+.pricing-section { background: var(--paper); }
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 56px;
+}
+.plan {
+  background: var(--card);
+  border: 1.5px solid var(--border-dark);
+  border-radius: 24px;
+  padding: 40px 36px;
+  position: relative;
+  transition: transform .25s, box-shadow .25s;
+}
+.plan:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+.plan.featured {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.plan.featured::before {
+  content: 'MOST POPULAR';
+  position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+  background: var(--accent);
+  color: var(--dark);
+  font-size: 0.65rem; font-weight: 800; letter-spacing: 0.1em;
+  padding: 5px 14px; border-radius: 999px;
+}
+.plan-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.plan.featured .plan-label { color: #555555; }
+.plan-price {
+  font-family: 'Fraunces', serif;
+  font-size: 3.5rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.plan-price sup { font-size: 1.4rem; vertical-align: top; margin-top: 8px; }
+.plan-price sub { font-size: 1rem; font-weight: 400; color: var(--muted); }
+.plan.featured .plan-price sub { color: #666666; }
+.plan-desc { font-size: 0.85rem; color: var(--muted); margin-top: 10px; line-height: 1.5; }
+.plan.featured .plan-desc { color: #555555; }
+.plan-divider { height: 1px; background: var(--border); margin: 24px 0; }
+.plan.featured .plan-divider { background: rgba(0,0,0,0.15); }
+.plan-features { display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px; }
+.plan-feature { display: flex; align-items: flex-start; gap: 8px; font-size: 0.88rem; }
+.plan-feature::before { content: '✓'; color: var(--green); font-weight: 800; flex-shrink: 0; margin-top: 1px; }
+.plan.featured .plan-feature { color: #111111; }
+.btn-plan {
+  display: block; text-align: center; padding: 15px;
+  border-radius: 999px; font-weight: 800; font-size: 0.92rem;
+  text-decoration: none; transition: all .2s; letter-spacing: -0.01em;
+}
+.btn-plan-dark { background: #000000; color: #ffffff; }
+.btn-plan-dark:hover { background: var(--accent); color: white; }
+.btn-plan-ink { background: var(--ink); color: var(--paper); }
+.btn-plan-ink:hover { background: var(--accent); }
+.plan-annual { border: 1.5px solid rgba(240,180,41,0.4); background: rgba(240,180,41,0.04); }
+.plan-annual::before {
+  content: 'BEST VALUE';
+  position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+  background: var(--gold);
+  color: var(--ink);
+  font-size: 0.65rem; font-weight: 800; letter-spacing: 0.1em;
+  padding: 5px 14px; border-radius: 999px;
+}
+.btn-plan-gold { background: var(--gold); color: var(--ink); }
+.btn-plan-gold:hover { background: #e0a520; }
+
+/* ── COMPARE ── */
+.compare-section { background: var(--cream); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 48px;
+  max-width: 760px;
+}
+.compare-card {
+  background: var(--card);
+  border: 1.5px solid var(--border-dark);
+  border-radius: 20px;
+  padding: 32px;
+}
+.compare-card.good { border-color: rgba(0,196,122,0.3); }
+.compare-card.bad { border-color: rgba(255,77,28,0.2); }
+.compare-head { font-weight: 800; font-size: 1rem; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+.compare-item { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; color: var(--muted); margin-bottom: 10px; }
+.compare-item.y::before { content: '✓'; color: var(--green); font-weight: 800; }
+.compare-item.n::before { content: '✗'; color: var(--accent); font-weight: 800; }
+
+/* ── FAQ ── */
+.faq-section { background: var(--cream); border-top: 1px solid var(--border); }
+.faq-list { max-width: 680px; margin-top: 48px; }
+.faq-item {
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+.faq-q {
+  width: 100%; text-align: left; background: none; border: none;
+  padding: 20px 0;
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-size: 0.97rem; font-weight: 700; color: var(--ink);
+  cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  transition: color .2s;
+}
+.faq-q:hover { color: var(--accent); }
+.faq-plus { font-size: 1.3rem; color: var(--muted); transition: transform .25s; flex-shrink: 0; }
+.faq-item.open .faq-plus { transform: rotate(45deg); color: var(--accent); }
+.faq-a { max-height: 0; overflow: hidden; font-size: 0.9rem; color: var(--muted); line-height: 1.7; transition: max-height .3s ease, padding .3s ease; }
+.faq-item.open .faq-a { max-height: 240px; padding-bottom: 20px; }
+
+/* ── DFY ── */
+.dfy-section { background: #111111; color: #f5f0e8; border: none; }
+.dfy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+.dfy-eyebrow { color: var(--blue); }
+.dfy-h { color: #f5f0e8; }
+.dfy-h em { color: var(--blue); }
+.dfy-sub { color: #A0A0A0; }
+.dfy-price {
+  display: inline-flex; align-items: baseline; gap: 6px;
+  background: rgba(245,240,232,0.06);
+  border: 1px solid rgba(245,240,232,0.12);
+  border-radius: 14px; padding: 20px 28px;
+  margin: 24px 0;
+}
+.dfy-amount {
+  font-family: 'Fraunces', serif;
+  font-size: 3.5rem; font-weight: 900; color: var(--blue);
+  letter-spacing: -0.03em; line-height: 1;
+}
+.dfy-amount-lbl { font-size: 0.85rem; color: rgba(245,240,232,0.5); }
+.btn-dfy {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--blue); color: var(--dark);
+  padding: 16px 32px; border-radius: 999px;
+  font-weight: 800; font-size: 0.95rem; text-decoration: none;
+  transition: all .2s; letter-spacing: -0.01em;
+}
+.btn-dfy:hover { background: #f0c040; transform: translateY(-2px); }
+.dfy-checklist { display: flex; flex-direction: column; gap: 14px; margin-top: 28px; }
+.dfy-check { display: flex; align-items: flex-start; gap: 12px; font-size: 0.92rem; color: rgba(245,240,232,0.95); line-height: 1.5; }
+.dfy-check-icon { width: 22px; height: 22px; border-radius: 50%; background: rgba(240,180,41,0.15); border: 1px solid rgba(240,180,41,0.3); display: flex; align-items: center; justify-content: center; color: var(--gold); font-size: 0.65rem; flex-shrink: 0; margin-top: 2px; }
+
+.dfy-visual {
+  background: rgba(245,240,232,0.05);
+  border: 1px solid rgba(245,240,232,0.12);
+  border-radius: 18px; overflow: hidden;
+}
+.dfy-visual-bar {
+  background: rgba(245,240,232,0.06);
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(245,240,232,0.08);
+  display: flex; align-items: center; gap: 6px;
+}
+.dfy-dot { width: 9px; height: 9px; border-radius: 50%; }
+.dfy-dot:nth-child(1){background:#ff5f57} .dfy-dot:nth-child(2){background:#febc2e} .dfy-dot:nth-child(3){background:#28c840}
+.dfy-url { flex:1; background: rgba(255,255,255,0.06); border-radius: 4px; padding: 4px 10px; font-size: 0.7rem; color: rgba(255,255,255,0.3); margin-left: 8px; }
+.dfy-step-item { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-bottom: 1px solid rgba(245,240,232,0.06); }
+.dfy-step-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(240,180,41,0.15); border: 1px solid rgba(240,180,41,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 700; color: var(--gold); flex-shrink: 0;
+}
+.dfy-step-strong { font-size: 0.85rem; font-weight: 700; color: #f5f0e8; display: block; }
+.dfy-step-sub { font-size: 0.75rem; color: rgba(245,240,232,0.65); }
+.dfy-progress-wrap { padding: 16px 20px; }
+.dfy-progress-bar { background: rgba(255,255,255,0.08); height: 4px; border-radius: 2px; overflow: hidden; }
+.dfy-progress-fill { height: 100%; width: 60%; background: linear-gradient(90deg, var(--gold), var(--green)); border-radius: 2px; animation: grow 2.5s ease-in-out infinite alternate; }
+@keyframes grow { from{width:30%} to{width:85%} }
+.dfy-progress-lbl { font-size: 0.72rem; color: rgba(245,240,232,0.5); margin-top: 6px; }
+
+/* ── FINAL CTA ── */
+.cta-section {
+  background: var(--paper);
+  border-top: 1px solid var(--border);
+  text-align: center;
+  padding: 120px 6%;
+}
+.cta-h { font-family: 'Fraunces', serif; font-size: clamp(2.5rem, 5vw, 4.5rem); font-weight: 900; letter-spacing: -0.03em; margin-bottom: 20px; }
+.cta-h em { font-style: italic; color: var(--accent); }
+.cta-sub { font-size: 1.05rem; color: var(--muted); margin-bottom: 40px; }
+.cta-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+.cta-fine { font-size: 0.78rem; color: var(--muted); }
+
+/* ── FOOTER ── */
+footer {
+  background: #111111;
+  color: #A0A0A0;
+  padding: 36px 6%;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+  position: relative; z-index: 1;
+}
+.footer-logo { font-family: 'Fraunces', serif; font-weight: 900; font-size: 1.1rem; color: #ffffff; }
+.footer-logo .up { color: var(--blue); }
+.footer-links { display: flex; gap: 24px; }
+.footer-links a { color: #A0A0A0; text-decoration: none; font-size: 0.82rem; transition: color .2s; }
+.footer-links a:hover { color: #ffffff; }
+.footer-powered { font-size: 0.75rem; }
+.footer-powered strong { color: #ffffff; }
+
+/* ── REVEAL ── */
+.reveal { opacity: 0; transform: translateY(24px); transition: all .6s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+@media (max-width: 1024px) {
+  .hero { grid-template-columns: 1fr; text-align: center; }
+  .hero h1, .hero-sub, .hero-stats { text-align: center; }
+  .hero-actions, .hero-stats { justify-content: center; }
+  .hero-visual { display: none; }
+  .steps-grid { grid-template-columns: 1fr 1fr; }
+  .pricing-grid { grid-template-columns: 1fr; max-width: 460px; }
+  .testi-grid, .dfy-grid { grid-template-columns: 1fr; }
+  .compare-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .steps-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo">Show <span class="up">Up</span><span class="badge">by Show Up Media</span></a>
+  <ul class="nav-links">
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#dfy">Done For You</a></li>
+    <li><a href="showup-onboarding.html" class="nav-cta">Start Building</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero" style="z-index:1">
+  <div>
+    <div class="hero-pill">Live Now — New in 2026</div>
+    <h1>
+      Stop missing bookings.<br>
+      <em>Go live today.</em><br>
+      <span class="strike">Not next month.</span>
+    </h1>
+    <p class="hero-sub">Design, customise and launch a fully branded online booking system — no tech skills, no waiting, no faff. Just fill in the blanks and you're taking appointments.</p>
+    <div class="hero-actions">
+      <a href="showup-onboarding.html" class="btn-hero">Start Building Free →</a>
+      <a href="#how" class="btn-ghost">See How It Works</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num"><span class="accent">5</span> min</div><div class="stat-label">Average setup time</div></div>
+      <div class="stat"><div class="stat-num">£<span class="accent">15</span></div><div class="stat-label">Per month, all in</div></div>
+      <div class="stat"><div class="stat-num"><span class="accent">80</span>%</div><div class="stat-label">Fewer no-shows</div></div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="mockup-stack">
+      <!-- Main booking card -->
+      <div class="mockup-card mockup-main">
+        <div class="m-header">
+          <div class="m-dot"></div><div class="m-dot"></div><div class="m-dot"></div>
+          <div class="m-url">showup.io/book/sarahs-studio</div>
+        </div>
+        <div class="m-body">
+          <div class="m-biz-row">
+            <div class="m-logo-sq">SH</div>
+            <div><div class="m-biz-name">Sarah's Hair Studio</div><div class="m-biz-sub">Manchester · ⭐ 4.9</div></div>
+          </div>
+          <div class="m-svc-row"><div><div class="m-svc-name">Cut & Blowdry</div><div class="m-svc-dur">45 mins</div></div><div class="m-svc-price">£45</div></div>
+          <div class="m-svc-row"><div><div class="m-svc-name">Full Head Colour</div><div class="m-svc-dur">2 hours</div></div><div class="m-svc-price">£95</div></div>
+          <div class="m-svc-row"><div><div class="m-svc-name">Balayage</div><div class="m-svc-dur">3 hours</div></div><div class="m-svc-price">£130</div></div>
+          <button class="m-book-btn">Book an Appointment →</button>
+        </div>
+      </div>
+      <!-- Dashboard card -->
+      <div class="mockup-card mockup-card-2">
+        <div class="card2-body">
+          <div class="card2-title">April 2026 📊</div>
+          <div class="stat-row">
+            <div class="mini-stat"><div class="mini-stat-num">£1,240</div><div class="mini-stat-lbl">Revenue</div></div>
+            <div class="mini-stat"><div class="mini-stat-num">47</div><div class="mini-stat-lbl">Bookings</div></div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-b" style="height:40%"></div><div class="bar-b" style="height:65%"></div>
+            <div class="bar-b hi" style="height:55%"></div><div class="bar-b" style="height:80%"></div>
+            <div class="bar-b" style="height:60%"></div><div class="bar-b hi" style="height:90%"></div>
+            <div class="bar-b" style="height:70%"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Confirmation card -->
+      <div class="mockup-card mockup-card-3">
+        <div class="card3-body">
+          <div class="confirm-check">🎉</div>
+          <div class="confirm-label">You're booked!</div>
+          <div class="confirm-sub">Wed 8 Apr · 10:00 AM<br>Sarah's Hair Studio</div>
+          <div class="confirm-badge">✓ Confirmed</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker">
+    <div class="ticker-item">🗓️ Online Booking <span class="t-accent">✓ Active</span></div>
+    <div class="ticker-item">💳 Stripe Payments <span class="t-accent">✓ Connected</span></div>
+    <div class="ticker-item">📱 SMS Reminders <span class="t-accent">✓ Auto-sent</span></div>
+    <div class="ticker-item">📧 Email Confirmations <span class="t-accent">✓ Live</span></div>
+    <div class="ticker-item">📊 Analytics Dashboard <span class="t-accent">✓ Tracking</span></div>
+    <div class="ticker-item">📆 Calendar Sync <span class="t-accent">✓ Google & Outlook</span></div>
+    <div class="ticker-item">👥 Customer Portal <span class="t-accent">✓ Enabled</span></div>
+    <div class="ticker-item">🗓️ Online Booking <span class="t-accent">✓ Active</span></div>
+    <div class="ticker-item">💳 Stripe Payments <span class="t-accent">✓ Connected</span></div>
+    <div class="ticker-item">📱 SMS Reminders <span class="t-accent">✓ Auto-sent</span></div>
+    <div class="ticker-item">📧 Email Confirmations <span class="t-accent">✓ Live</span></div>
+    <div class="ticker-item">📊 Analytics Dashboard <span class="t-accent">✓ Tracking</span></div>
+    <div class="ticker-item">📆 Calendar Sync <span class="t-accent">✓ Google & Outlook</span></div>
+    <div class="ticker-item">👥 Customer Portal <span class="t-accent">✓ Enabled</span></div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section id="how" class="section how-section">
+  <div class="section-inner">
+    <div class="eyebrow">How It Works</div>
+    <div class="section-h">Done in <em>5 steps.</em><br>Live in 5 minutes.</div>
+    <div class="steps-grid reveal">
+      <div class="step-item"><div class="step-n">01</div><span class="step-icon">🏷️</span><div class="step-h">Name Your Business</div><div class="step-p">Enter your name, type, and contact details. 60 seconds.</div><div class="step-time">⏱ ~60s</div></div>
+      <div class="step-item"><div class="step-n">02</div><span class="step-icon">🎨</span><div class="step-h">Set Your Brand</div><div class="step-p">Pick your colour and upload your logo. Instantly branded.</div><div class="step-time">⏱ ~45s</div></div>
+      <div class="step-item"><div class="step-n">03</div><span class="step-icon">📋</span><div class="step-h">Add Services</div><div class="step-p">List what you offer — set durations and prices.</div><div class="step-time">⏱ ~90s</div></div>
+      <div class="step-item"><div class="step-n">04</div><span class="step-icon">📆</span><div class="step-h">Set Availability</div><div class="step-p">Choose your working hours and how far ahead to book.</div><div class="step-time">⏱ ~60s</div></div>
+      <div class="step-item"><div class="step-n">05</div><span class="step-icon">🚀</span><div class="step-h">Go Live</div><div class="step-p">Copy your booking link. Drop it everywhere. Done.</div><div class="step-time">⏱ ~30s</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing" class="section pricing-section">
+  <div class="section-inner">
+    <div class="eyebrow">Pricing</div>
+    <div class="section-h">Simple. Honest.<br><em>No hidden fees.</em></div>
+    <div class="pricing-grid reveal">
+      <div class="plan featured">
+        <div class="plan-label">DIY Monthly</div>
+        <div class="plan-price"><sup>£</sup>15<sub>/month</sub></div>
+        <div class="plan-desc">Build it yourself in 5 minutes. Full booking system, live today. Cancel anytime.</div>
+        <div class="plan-divider"></div>
+        <div class="plan-features">
+          <div class="plan-feature">Full booking system builder</div>
+          <div class="plan-feature">Unlimited services & staff</div>
+          <div class="plan-feature">Automated SMS & email reminders</div>
+          <div class="plan-feature">Stripe payment integration</div>
+          <div class="plan-feature">Customer self-serve portal</div>
+          <div class="plan-feature">Google & Outlook calendar sync</div>
+          <div class="plan-feature">Analytics dashboard</div>
+          <div class="plan-feature">Cancel anytime</div>
+        </div>
+        <a href="showup-onboarding.html" class="btn-plan btn-plan-dark">Start Building Free →</a>
+      </div>
+      <div class="plan plan-annual">
+        <div class="plan-label">DIY Annual</div>
+        <div class="plan-price"><sup>£</sup>99<sub>/year</sub></div>
+        <div class="plan-desc">Pay once for the full year — less than £8.50/month. Same system, bigger saving.</div>
+        <div class="plan-divider"></div>
+        <div class="plan-features">
+          <div class="plan-feature">Everything in DIY Monthly</div>
+          <div class="plan-feature">Save £81 vs monthly billing</div>
+          <div class="plan-feature">Priority support included</div>
+          <div class="plan-feature">Early access to new features</div>
+          <div class="plan-feature">Free annual system review</div>
+        </div>
+        <a href="showup-onboarding.html" class="btn-plan btn-plan-gold">Start Building Free →</a>
+      </div>
+      <div class="plan">
+        <div class="plan-label">Prebuilt For You</div>
+        <div class="hero-sub">Professional booking system with integrated CRM</div>
+        <div class="hero-desc">Streamline appointments while keeping your existing outreach tools. Modern booking for your clients, powerful CRM for your team.</div>
+        <div class="plan-divider"></div>
+        <div class="plan-features">
+          <div class="plan-feature">We design & build everything</div>
+          <div class="plan-feature">Custom branded to your business</div>
+          <div class="plan-feature">All services & payments configured</div>
+          <div class="plan-feature">SMS & email reminders set up</div>
+          <div class="plan-feature">Live within 24 hours</div>
+          <div class="plan-feature">Full walkthrough included</div>
+          <div class="plan-feature">Then £15/month ongoing</div>
+        </div>
+        <a href="https://calendly.com/admin-showupmedia/30min" class="btn-plan btn-plan-ink">Get Quote & Built — £49 + £15/mo →</a>
+      </div>
+    </div>
+    <p style="margin-top:20px;color:var(--muted);font-size:0.82rem;text-align:center;">💳 Secure payment via Stripe · No setup costs on DIY plans · Live within minutes</p>
+  </div>
+</section>
+
+<!-- COMPARE -->
+<section class="section compare-section">
+  <div class="section-inner">
+    <div class="eyebrow">Why Show Up</div>
+    <div class="section-h">Stop paying £100+/mo for<br><em>features you don't need.</em></div>
+    <div class="compare-grid reveal">
+      <div class="compare-card bad">
+        <div class="compare-head">❌ Other Platforms</div>
+        <div class="compare-item n">£50–£200/month</div>
+        <div class="compare-item n">Weeks to set up properly</div>
+        <div class="compare-item n">Complex & overwhelming</div>
+        <div class="compare-item n">Bloated features you never use</div>
+        <div class="compare-item n">Generic, unbranded look</div>
+        <div class="compare-item n">Long-term contracts</div>
+      </div>
+      <div class="compare-card good">
+        <div class="compare-head" style="color:var(--green)">✓ Show Up</div>
+        <div class="compare-item y">£15/month, all in</div>
+        <div class="compare-item y">Live in under 5 minutes</div>
+        <div class="compare-item y">Simple, guided setup</div>
+        <div class="compare-item y">Only what your business needs</div>
+        <div class="compare-item y">Fully branded to your business</div>
+        <div class="compare-item y">Cancel anytime, no lock-in</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DONE FOR YOU -->
+<section id="dfy" class="section dfy-section">
+  <div class="section-inner">
+    <div class="dfy-grid reveal">
+      <div>
+        <div class="eyebrow dfy-eyebrow">Done-For-You Option</div>
+        <div class="section-h dfy-h">Rather we <em>do it for you?</em></div>
+        <p class="section-sub dfy-sub">Not a tech person? No problem. We'll set your entire booking system up for you — custom branded, fully configured, tested and ready to take bookings within 24 hours.</p>
+        <div class="dfy-price">
+          <div class="dfy-amount">£49</div>
+          <div class="dfy-amount-lbl">one-time setup<br><span style="font-size:0.72rem;">+ £15/month ongoing</span></div>
+        </div>
+        <div><a href="https://calendly.com/admin-showupmedia/30min" class="btn-dfy">Book My Setup Call →</a></div>
+        <div class="dfy-checklist">
+          <div class="dfy-check"><div class="dfy-check-icon">✓</div>Built to your brand, delivered within 24hrs</div>
+          <div class="dfy-check"><div class="dfy-check-icon">✓</div>Full walkthrough so you know how to use it</div>
+          <div class="dfy-check"><div class="dfy-check-icon">✓</div>Ongoing support included with your plan</div>
+        </div>
+      </div>
+      <div>
+        <div class="dfy-visual">
+          <div class="dfy-visual-bar">
+            <div class="dfy-dot"></div><div class="dfy-dot"></div><div class="dfy-dot"></div>
+            <div class="dfy-url">app.showup.io/build</div>
+          </div>
+          <div class="dfy-step-item"><div class="dfy-step-num">✓</div><div><span class="dfy-step-strong">Business branding applied</span><span class="dfy-step-sub">Your logo, colours & services added</span></div></div>
+          <div class="dfy-step-item"><div class="dfy-step-num">✓</div><div><span class="dfy-step-strong">Payment gateway connected</span><span class="dfy-step-sub">Stripe linked & tested live</span></div></div>
+          <div class="dfy-step-item"><div class="dfy-step-num">✓</div><div><span class="dfy-step-strong">Reminder sequences active</span><span class="dfy-step-sub">SMS & email automations firing</span></div></div>
+          <div class="dfy-step-item"><div class="dfy-step-num" style="background:rgba(240,180,41,0.15);border-color:rgba(240,180,41,0.3);color:var(--gold);">→</div><div><span class="dfy-step-strong">Booking link delivered to you</span><span class="dfy-step-sub">Share & start taking appointments</span></div></div>
+          <div class="dfy-progress-wrap">
+            <div class="dfy-progress-bar"><div class="dfy-progress-fill"></div></div>
+            <div class="dfy-progress-lbl">Setup progress — usually complete within 24hrs</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" class="section faq-section">
+  <div class="section-inner">
+    <div class="eyebrow">FAQ</div>
+    <div class="section-h">Quick answers.</div>
+    <nav class="nav">
+      <div class="nav-brand">
+        <div class="nav-logo">SU</div>
+        <div class="nav-name">Show Up</div>
+      </div>
+      <div class="nav-links">
+        <a href="/book" class="nav-link">Book Now</a>
+        <a href="/dashboard" class="nav-link">Dashboard</a>
+      </div>
+      <button class="nav-menu" onclick="toggleMenu()">☰</button>
+    </nav>
+    <div class="faq-list reveal">
+      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">What's included in the £15/month?<span class="faq-plus">+</span></button><div class="faq-a">Everything. The full booking system builder, unlimited services, automated SMS and email reminders, Stripe payment integration, customer portal, calendar sync, analytics, and ongoing hosting. No hidden extras, ever.</div></div>
+      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">What's the difference between DIY and Done-For-You?<span class="faq-plus">+</span></button><div class="faq-a">With DIY, you build it yourself using our simple 6-step wizard — takes about 5 minutes. With Done-For-You (£49), we build your entire system for you, branded and configured, live within 24 hours. Both run on the same £15/month plan after that.</div></div>
+      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">Do I need a website?<span class="faq-plus">+</span></button><div class="faq-a">No. You get a standalone booking link you can share anywhere — Instagram bio, WhatsApp, Google listing. If you have a website, we can embed the booking form directly into it too.</div></div>
+      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">Can I cancel anytime?<span class="faq-plus">+</span></button><div class="faq-a">Yes, completely. No contracts, no penalties, no awkward phone calls. Cancel and your subscription ends at the end of the current billing period.</div></div>
+      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">What businesses is Show Up built for?<span class="faq-plus">+</span></button><div class="faq-a">Any service business that runs on appointments — barbers, hairdressers, personal trainers, coaches, therapists, nail techs, tattoo artists, tutors, cleaning companies. If you take bookings, Show Up works for you.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="cta-section">
+  <div class="cta-h">Your booking system.<br><em>Live today.</em></div>
+  <p class="cta-sub">Build free, preview your system, then subscribe to go live. £15/month after you're happy with it.</p>
+  <div class="cta-actions">
+    <a href="showup-onboarding.html" class="btn-hero">Start Building Free →</a>
+    <a href="https://calendly.com/admin-showupmedia/30min" class="btn-ghost">Get Quote & Built — £49</a>
+  </div>
+  <p class="cta-fine">Build first, pay later · Preview before subscribing · Cancel anytime</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Show <span class="up">Up</span></div>
+  <div class="footer-links">
+    <a href="showup-onboarding.html">Build Your System</a>
+    <a href="https://showupmedia.org" target="_blank">Show Up Media</a>
+    <a href="https://www.instagram.com/_showupmedia?igsh=MTQwcTFweG5meG51eQ%3D%3D&utm_source=qr" target="_blank" style="display:inline-flex;align-items:center;gap:6px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+      Instagram
+    </a>
+    <a href="https://wa.me/447539269039" target="_blank" style="display:inline-flex;align-items:center;gap:6px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      WhatsApp
+    </a>
+  </div>
+  <div class="footer-powered">Powered by <strong>Show Up Media</strong> · © 2026</div>
+</footer>
+
+<script>
+function toggleFaq(btn) {
+  const item = btn.closest('.faq-item');
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

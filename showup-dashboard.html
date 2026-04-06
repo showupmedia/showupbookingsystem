@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Sarah's Hair Studio · Show Up</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900&family=Cabinet+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --dark: #000000;
+  --white: #FFFFFF;
+  --blue: #2D8EFF;
+  --blue-dim: rgba(45,142,255,0.12);
+  --blue-mid: rgba(45,142,255,0.25);
+  --muted: #A0A0A0;
+  --muted-mid: #C0C0C0;
+  --card: #1A1A1A;
+  --card-border: rgba(255,255,255,0.1);
+  --card-hover: rgba(255,255,255,0.08);
+  --grid: rgba(255,255,255,0.05);
+  --accent: var(--blue);
+  --accent-dim: var(--blue-dim);
+  --border: var(--card-border);
+  --sidebar-bg: #000000;
+  --sidebar-border: rgba(255,255,255,0.06);
+  --green: #00C47A;
+  --green-dim: rgba(0,196,122,0.12);
+  --gold: #F59E0B;
+  --gold-dim: rgba(245,158,11,0.12);
+  --red: #EF4444;
+  --radius: 4px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.8);
+  --shadow-lg: 0 12px 60px rgba(0,0,0,0.9);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Cabinet Grotesk',sans-serif;background:var(--dark);color:var(--white);min-height:100vh;display:flex;}
+
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opacity:1;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:20px 20px;}
+
+/* SIDEBAR */
+.sidebar{width:252px;min-height:100vh;background:var(--sidebar-bg);border-right:1px solid var(--sidebar-border);display:flex;flex-direction:column;padding:28px 0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sb-brand{padding:0 22px 24px;border-bottom:1px solid var(--sidebar-border);margin-bottom:22px;}
+.sb-logo{font-family:'Fraunces',serif;font-weight:900;font-size:1.2rem;letter-spacing:-0.02em;color:var(--white);}
+.sb-logo .up{color:var(--blue);}
+.sb-biz{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.sb-biz-icon{width:32px;height:32px;background:var(--blue);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:900;font-size:0.78rem;color:var(--dark);flex-shrink:0;}
+.sb-biz-name{font-weight:700;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-biz-sub{font-size:0.68rem;color:var(--muted);}
+.sb-status{display:inline-flex;align-items:center;gap:5px;background:var(--green-dim);border:1px solid rgba(0,196,122,0.2);color:var(--green);font-size:0.65rem;font-weight:700;padding:3px 10px;border-radius:999px;letter-spacing:0.05em;}
+.sb-status::before{content:'●';font-size:0.45rem;}
+.nav-section{padding:0 14px;margin-bottom:8px;}
+.nav-lbl{font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted-mid);padding:0 8px;margin-bottom:6px;font-weight:700;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--radius);color:var(--muted);font-size:0.84rem;cursor:pointer;transition:all .15s;border:1px solid transparent;margin-bottom:2px;text-decoration:none;}
+.nav-item:hover{background:var(--card-hover);color:var(--white);}
+.nav-item.active{background:var(--blue-dim);border-color:var(--blue-mid);color:var(--blue);}
+.nav-item.active .stat-change.down{color:var(--red);}
+.nav-icon{font-size:0.95rem;width:18px;text-align:center;}
+.nav-badge{margin-left:auto;background:var(--blue);color:white;font-size:0.6rem;font-weight:800;padding:2px 6px;border-radius:999px;}
+.sb-footer{margin-top:auto;padding:16px 14px 0;border-top:1px solid var(--sidebar-border);}
+.share-box{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:12px 14px;}
+.stat-label{font-size:0.68rem;color:var(--muted);letter-spacing:0.04em;text-transform:uppercase;font-weight:700;}
+
+/* MAIN */
+.main{flex:1;overflow-x:hidden;}
+.topbar{background:var(--sidebar-bg);border-bottom:1px solid var(--sidebar-border);padding:15px 30px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+.tb-greeting{font-family:'Fraunces',serif;font-weight:700;font-size:1.05rem;}
+.tb-sub{font-size:0.76rem;color:var(--muted);margin-top:2px;}
+.tb-right{display:flex;align-items:center;gap:10px;}
+.notif-btn{position:relative;width:34px;height:34px;border-radius:var(--radius);background:var(--card);border:1px solid var(--card-border);display:flex;align-items:center;justify-content:center;font-size:0.95rem;cursor:pointer;transition:all .15s;}
+.notif-btn:hover{border-color:var(--blue);color:var(--blue);}
+.notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--blue);border-radius:50%;border:1.5px solid var(--sidebar-bg);}
+.avatar{width:34px;height:34px;border-radius:var(--radius);background:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:700;font-size:0.82rem;color:var(--dark);cursor:pointer;}
+
+/* CONTENT */
+.content{padding:26px 28px;}
+
+/* ALERT */
+.alert-bar{background:var(--gold-dim);border:1px solid rgba(245,158,11,0.25);border-radius:var(--radius);padding:11px 16px;display:flex;align-items:center;gap:10px;margin-bottom:22px;font-size:0.82rem;color:var(--gold);}
+.alert-dismiss{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:2px 6px;border-radius:var(--radius);}
+.alert-dismiss:hover{color:var(--white);}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+.stat-card{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:20px 18px;position:relative;overflow:hidden;transition:border-color .2s;}
+.stat-card:hover{border-color:var(--blue-mid);}
+.stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.stat-card.green::after{background:var(--green);}
+.stat-icon.green{background:var(--green-dim);color:var(--green);}
+.stat-card.blue::after{background:var(--blue);}
+.stat-icon.blue{background:var(--blue-dim);color:var(--blue);}
+.stat-card.yellow::after{background:var(--gold);}
+.stat-icon.yellow{background:var(--gold-dim);color:var(--gold);}
+.stat-icon{font-size:1.3rem;margin-bottom:12px;}
+.stat-val{font-family:'Fraunces',serif;font-weight:700;font-size:1.9rem;letter-spacing:-0.02em;line-height:1;}
+.stat-lbl{font-size:0.76rem;color:var(--muted);margin-top:5px;font-weight:500;}
+.stat-change{display:inline-flex;align-items:center;gap:3px;margin-top:7px;font-size:0.7rem;font-weight:700;padding:3px 7px;border-radius:999px;}
+.stat-change.up{background:var(--green-dim);color:var(--green);}
+.stat-change.muted{background:var(--card2);color:var(--muted);}
+
+/* TWO COL */
+.two-col{display:grid;grid-template-columns:1fr 340px;gap:12px;margin-bottom:24px;}
+.dash-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.dash-card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.dash-card-title{font-family:'Fraunces',serif;font-weight:700;font-size:0.9rem;}
+.dash-action{font-size:0.76rem;color:var(--accent);cursor:pointer;transition:opacity .15s;background:none;border:none;font-family:'Cabinet Grotesk',sans-serif;}
+.dash-action:hover{opacity:0.7;}
+
+/* TABS */
+.tab-row{display:flex;gap:0;border-bottom:1px solid var(--border);padding:0 20px;}
+.tab{padding:11px 14px;font-size:0.81rem;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;}
+.tab:hover{color:var(--white);}
+.tab.active{color:var(--white);border-bottom-color:var(--accent);font-weight:700;}
+
+/* BOOKINGS */
+.booking-list{padding:6px 0;}
+.booking-item{display:flex;align-items:center;gap:12px;padding:11px 20px;border-bottom:1px solid var(--border);transition:background .15s;cursor:pointer;}
+.booking-item:last-child{border-bottom:none;}
+.booking-item:hover{background:rgba(255,255,255,0.02);}
+.bk-time{background:var(--card2);border:1px solid var(--border2);border-radius:7px;padding:7px 10px;text-align:center;min-width:54px;flex-shrink:0;}
+.bk-time-num{font-family:'Fraunces',serif;font-weight:700;font-size:0.84rem;}
+.bk-time-ampm{font-size:0.62rem;color:var(--muted);margin-top:1px;}
+.bk-info{flex:1;min-width:0;}
+.bk-name{font-weight:700;font-size:0.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bk-svc{font-size:0.73rem;color:var(--muted);margin-top:2px;}
+.bk-status{font-size:0.68rem;font-weight:700;padding:4px 8px;border-radius:999px;white-space:nowrap;flex-shrink:0;}
+.s-confirmed{background:var(--green-dim);color:var(--green);border:1px solid rgba(0,196,122,0.2);}
+.s-pending{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(240,180,41,0.2);}
+.s-cancelled{background:rgba(255,82,82,0.08);color:var(--red);border:1px solid rgba(255,82,82,0.15);}
+.s-new{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(78,143,255,0.2);}
+.bk-price{font-family:'Fraunces',serif;font-weight:700;font-size:0.88rem;color:var(--white);flex-shrink:0;}
+
+/* MINI CALENDAR */
+.mini-cal{padding:14px 18px;}
+.mini-cal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.mini-cal-month{font-family:'Fraunces',serif;font-weight:700;font-size:0.86rem;}
+.mini-cal-nav{background:none;border:1px solid var(--border2);color:var(--muted);width:24px;height:24px;border-radius:6px;cursor:pointer;font-size:0.7rem;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.mini-cal-nav:hover{border-color:var(--accent);color:var(--accent);}
+.mini-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;}
+.mini-dn{font-size:0.6rem;color:var(--muted2);padding:0 0 5px;font-weight:700;}
+.mini-day{padding:5px 0;font-size:0.73rem;border-radius:5px;cursor:pointer;color:var(--muted);transition:all .1s;}
+.mini-day:hover:not(.empty):not(.past){background:var(--border);color:var(--white);}
+.mini-day.today{background:var(--accent);color:white;font-weight:800;}
+.mini-day.has-bk{color:var(--white);font-weight:700;}
+.mini-day.has-bk::after{content:'·';display:block;color:var(--accent);font-size:0.8rem;line-height:0.3;}
+.mini-day.past{color:var(--muted2);cursor:default;}
+.mini-day.empty{cursor:default;}
+
+/* QUICK ACTIONS */
+.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 18px;}
+.qa-item{background:var(--card2);border:1px solid var(--border2);border-radius:10px;padding:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;font-size:0.8rem;font-weight:700;}
+.qa-item:hover{border-color:var(--accent);color:var(--accent);}
+.qa-icon{font-size:1rem;}
+
+/* CHART */
+.chart-area{padding:18px;}
+.chart-bars{display:flex;align-items:flex-end;gap:6px;height:90px;margin-top:6px;}
+.bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.bar-el{width:100%;border-radius:4px 4px 0 0;background:var(--border);transition:all .3s;cursor:pointer;}
+.bar-el:hover{opacity:0.8;}
+.bar-el.hi{background:linear-gradient(180deg,var(--accent) 0%,rgba(255,77,28,0.5) 100%);}
+.bar-el.now{background:linear-gradient(180deg,var(--accent) 0%,rgba(255,77,28,0.7) 100%);box-shadow:0 0 10px rgba(255,77,28,0.25);}
+.bar-lbl{font-size:0.6rem;color:var(--muted);text-align:center;}
+.chart-legend{display:flex;gap:14px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:0.72rem;color:var(--muted);}
+.leg-dot{width:7px;height:7px;border-radius:2px;}
+
+/* UPCOMING */
+.upcoming-item{display:flex;align-items:center;gap:10px;padding:10px 20px;border-bottom:1px solid var(--border);font-size:0.81rem;}
+.upcoming-item:last-child{border-bottom:none;}
+.up-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.up-time{color:var(--muted);white-space:nowrap;min-width:52px;font-size:0.78rem;}
+.up-name{font-weight:700;flex:1;}
+.up-svc{color:var(--muted);font-size:0.73rem;}
+
+@media(max-width:1100px){.stats-grid{grid-template-columns:1fr 1fr;}.two-col{grid-template-columns:1fr;}}
+@media(max-width:768px){.sidebar{display:none;}.content{padding:18px 14px;}}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo" style="margin-bottom:14px;">Show <span class="up">Up</span></div>
+    <div class="sb-biz">
+      <div class="sb-biz-icon">SH</div>
+      <div><div class="sb-biz-name">Sarah's Hair Studio</div><div class="sb-biz-sub">Hair & Beauty</div></div>
+    </div>
+    <div class="sb-status">LIVE · Taking Bookings</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-lbl">Main</div>
+    <a href="#dashboard" class="nav-item active"><span class="nav-icon">📊</span>Dashboard</a>
+    <a href="#bookings" class="nav-item"><span class="nav-icon">📅</span>Bookings<span class="nav-badge">3</span></a>
+    <a href="#customers" class="nav-item"><span class="nav-icon">👥</span>Customers</a>
+    <a href="#payments" class="nav-item"><span class="nav-icon">💳</span>Payments</a>
+  </div>
+  <div class="nav-section" style="margin-top:6px;">
+    <div class="nav-lbl">Manage</div>
+    <a href="#services" class="nav-item"><span class="nav-icon">✂️</span>Services</a>
+    <a href="#staff" class="nav-item"><span class="nav-icon">👤</span>Staff</a>
+    <a href="#availability" class="nav-item"><span class="nav-icon">🕐</span>Availability</a>
+    <a href="#reminders" class="nav-item"><span class="nav-icon">🔔</span>Reminders</a>
+  </div>
+  <div class="nav-section" style="margin-top:6px;">
+    <div class="nav-lbl">Settings</div>
+    <a href="#appearance" class="nav-item"><span class="nav-icon">🎨</span>Appearance</a>
+    <a href="#settings" class="nav-item"><span class="nav-icon">⚙️</span>Settings</a>
+    <a href="#help" class="nav-item"><span class="nav-icon">❓</span>Help & Support</a>
+    <a href="#crm" class="nav-item"><span class="nav-icon">📈</span>CRM</a>
+  </div>
+  <div class="sb-footer">
+    <div class="share-box">
+      <div class="share-lbl">Your Booking Link</div>
+      <div class="share-url">showup.io/book/sarahs-studio</div>
+      <button class="copy-sm" onclick="this.textContent='Copied! ✓';setTimeout(()=>this.textContent='Copy Link',2000)">Copy Link</button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="tb-greeting">Good morning, Sarah 👋</div>
+      <div class="tb-sub">Sunday, 5 April 2026 · 3 bookings today</div>
+    </div>
+    <div class="tb-right">
+      <div class="notif-btn">🔔<div class="notif-dot"></div></div>
+      <div class="avatar">SJ</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ALERT -->
+    <div class="alert-bar" id="alertBar">
+      ⚠️ <strong style="margin-right:4px;">Reminder:</strong> Maya Roberts has a day off on Tuesday 7th April. Her bookings may need rescheduling.
+      <button class="alert-dismiss" onclick="document.getElementById('alertBar').style.display='none'">✕</button>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card green">
+        <div class="stat-icon green">💰</div>
+        <div class="stat-val">£1,240</div>
+        <div class="stat-lbl">Revenue this month</div>
+        <div class="stat-change up">↑ 18% vs last month</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-icon blue">📅</div>
+        <div class="stat-val">47</div>
+        <div class="stat-lbl">Bookings this month</div>
+        <div class="stat-change up">↑ 12% vs last month</div>
+      </div>
+      <div class="stat-card yellow">
+        <div class="stat-icon yellow">🚫</div>
+        <div class="stat-val">2%</div>
+        <div class="stat-lbl">No-show rate</div>
+        <div class="stat-change muted">↓ was 28% before</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-icon blue">👥</div>
+        <div class="stat-val">34</div>
+        <div class="stat-lbl">Unique customers</div>
+        <div class="stat-change up">↑ 6 new this month</div>
+      </div>
+    </div>
+
+    <!-- TWO COL -->
+    <div class="two-col">
+      <!-- GETTING STARTED -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div class="dash-card-title">🚀 Getting Started</div>
+        </div>
+        <div style="padding:20px;">
+          <div style="text-align:center;margin-bottom:24px;">
+            <div style="font-family:'Fraunces',serif;font-size:1.4rem;font-weight:900;color:var(--blue);margin-bottom:8px;">Welcome to Your Dashboard!</div>
+            <div style="color:var(--muted);font-size:0.9rem;">Your booking system is ready to go. Here's what to do next:</div>
+          </div>
+          <div style="display:grid;gap:12px;">
+            <div class="qa-item" style="justify-content:center;background:var(--blue-dim);border:1px solid var(--blue-mid);border-radius:var(--radius);padding:12px;">
+              <span class="qa-icon">📋</span>
+              <div>
+                <div style="font-weight:700;">Set Up Your Services</div>
+                <div style="font-size:0.8rem;color:var(--muted);margin-top:2px;">Add the services you offer</div>
+              </div>
+            </div>
+            <div class="qa-item" style="justify-content:center;background:var(--green-dim);border:1px solid rgba(0,196,122,0.25);border-radius:var(--radius);padding:12px;">
+              <span class="qa-icon">👥</span>
+              <div>
+                <div style="font-weight:700;">Add Team Members</div>
+                <div style="font-size:0.8rem;color:var(--muted);margin-top:2px;">Configure your staff availability</div>
+              </div>
+            </div>
+            <div class="qa-item" style="justify-content:center;background:var(--gold-dim);border:1px solid rgba(245,158,11,0.25);border-radius:var(--radius);padding:12px;">
+              <span class="qa-icon">📅</span>
+              <div>
+                <div style="font-weight:700;">Set Business Hours</div>
+                <div style="font-size:0.8rem;color:var(--muted);margin-top:2px;">Configure your availability</div>
+              </div>
+            </div>
+          </div>
+          <div style="text-align:center;margin-top:20px;">
+            <button class="dash-action" style="background:var(--blue);color:var(--dark);padding:10px 20px;border-radius:var(--radius);font-weight:700;">Complete Setup →</button>
+          </div>
+        </div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-header"><div class="dash-card-title">📈 System Status</div></div>
+        <div style="padding:20px;">
+          <div style="display:grid;gap:16px;">
+            <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--green-dim);border:1px solid rgba(0,196,122,0.25);border-radius:var(--radius);">
+              <div style="width:8px;height:8px;background:var(--green);border-radius:50%;"></div>
+              <div style="flex:1;">
+                <div style="font-weight:700;">Booking System Online</div>
+                <div style="font-size:0.8rem;color:var(--muted);margin-top:2px;">Ready to accept bookings</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--blue-dim);border:1px solid var(--blue-mid);border-radius:var(--radius);">
+              <div style="width:8px;height:8px;background:var(--blue);border-radius:50%;"></div>
+              <div style="flex:1;">
+                <div style="font-weight:700;">Calendar Connected</div>
+                <div style="font-size:0.8rem;color:var(--muted);margin-top:2px;">Synced with your calendar</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--gold-dim);border:1px solid rgba(245,158,11,0.25);border-radius:var(--radius);">
+              <div style="width:8px;height:8px;background:var(--gold);border-radius:50%;"></div>
+              <div style="flex:1;">
+                <div style="font-weight:700;">Notifications Active</div>
+                <div style="font-size:0.8rem;color:var(--muted);margin-top:2px;">Email & SMS enabled</div>
+              </div>
+            </div>
+          </div>
+          <div style="text-align:center;margin-top:16px;">
+            <button class="dash-action">View Settings →</button>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <!-- MINI CALENDAR -->
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <div class="dash-card-title">April 2026</div>
+            <div style="display:flex;gap:4px;">
+              <button class="mini-cal-nav">‹</button>
+              <button class="mini-cal-nav">›</button>
+            </div>
+          </div>
+          <div class="mini-cal">
+            <div class="mini-grid">
+              <div class="mini-dn">Mo</div><div class="mini-dn">Tu</div><div class="mini-dn">We</div>
+              <div class="mini-dn">Th</div><div class="mini-dn">Fr</div><div class="mini-dn">Sa</div><div class="mini-dn">Su</div>
+              <div class="mini-day empty"></div><div class="mini-day empty"></div>
+              <div class="mini-day has-bk">1</div><div class="mini-day has-bk">2</div>
+              <div class="mini-day has-bk">3</div><div class="mini-day has-bk">4</div>
+              <div class="mini-day today">5</div>
+              <div class="mini-day has-bk">6</div><div class="mini-day">7</div>
+              <div class="mini-day has-bk">8</div><div class="mini-day has-bk">9</div>
+              <div class="mini-day has-bk">10</div><div class="mini-day has-bk">11</div>
+              <div class="mini-day">12</div>
+              <div class="mini-day has-bk">13</div><div class="mini-day has-bk">14</div>
+              <div class="mini-day">15</div><div class="mini-day has-bk">16</div>
+              <div class="mini-day has-bk">17</div><div class="mini-day has-bk">18</div>
+              <div class="mini-day">19</div>
+              <div class="mini-day">20</div><div class="mini-day">21</div>
+              <div class="mini-day">22</div><div class="mini-day">23</div>
+              <div class="mini-day">24</div><div class="mini-day">25</div>
+              <div class="mini-day">26</div>
+              <div class="mini-day">27</div><div class="mini-day">28</div>
+              <div class="mini-day">29</div><div class="mini-day">30</div>
+              <div class="mini-day empty"></div><div class="mini-day empty"></div><div class="mini-day empty"></div>
+            </div>
+          </div>
+        </div>
+        <!-- QUICK ACTIONS -->
+        <div class="dash-card">
+          <div class="dash-card-header"><div class="dash-card-title">Quick Actions</div></div>
+          <div class="qa-grid">
+            <div class="qa-item"><span class="qa-icon">➕</span>New Booking</div>
+            <div class="qa-item"><span class="qa-icon">🚫</span>Block Time</div>
+            <div class="qa-item"><span class="qa-icon">💬</span>Send Reminder</div>
+            <div class="qa-item"><span class="qa-icon">📤</span>Share Link</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHART + UPCOMING -->
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:12px;">
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div class="dash-card-title">Revenue — Last 8 Weeks</div>
+          <button class="dash-action">Export →</button>
+        </div>
+        <div class="chart-area">
+          <div style="font-family:'Fraunces',serif;font-size:1.8rem;font-weight:900;line-height:1;margin:4px 0;">£1,240 <span style="font-size:0.72rem;font-weight:400;color:var(--green);">↑ 18%</span></div>
+          <div style="font-size:0.73rem;color:var(--muted);margin-bottom:10px;">Month to date</div>
+          <div class="chart-bars" id="chartBars"></div>
+          <div class="chart-legend">
+            <div class="leg-item"><div class="leg-dot" style="background:var(--accent)"></div>This period</div>
+            <div class="leg-item"><div class="leg-dot" style="background:var(--border)"></div>Previous period</div>
+          </div>
+        </div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-header"><div class="dash-card-title">📋 Setup Tasks</div></div>
+        <div style="padding:20px;">
+          <div style="display:grid;gap:12px;">
+            <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--card-hover);border-radius:var(--radius);">
+              <div style="width:24px;height:24px;border-radius:var(--radius);background:var(--blue);display:flex;align-items:center;justify-content:center;color:var(--dark);font-weight:700;">1</div>
+              <div style="flex:1;">
+                <div style="font-weight:700;">Configure Services</div>
+                <div style="font-size:0.8rem;color:var(--muted);margin-top:2px;">Add your service offerings</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--card-hover);border-radius:var(--radius);">
+              <div style="width:24px;height:24px;border-radius:var(--radius);background:var(--blue);display:flex;align-items:center;justify-content:center;color:var(--dark);font-weight:700;">2</div>
+              <div style="flex:1;">
+                <div style="font-weight:700;">Set Availability</div>
+                <div style="font-size:0.8rem;color:var(--muted);margin-top:2px;">Configure business hours</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--card-hover);border-radius:var(--radius);">
+              <div style="width:24px;height:24px;border-radius:var(--radius);background:var(--blue);display:flex;align-items:center;justify-content:center;color:var(--dark);font-weight:700;">3</div>
+              <div style="flex:1;">
+                <div style="font-weight:700;">Test Booking Flow</div>
+                <div style="font-size:0.8rem;color:var(--muted);margin-top:2px;">Try a test booking</div>
+              </div>
+            </div>
+          </div>
+          <div style="text-align:center;margin-top:16px;">
+            <button class="dash-action">View All Tasks →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// Get URL parameters for dashboard preview
+function getDashboardParams() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    id: params.get('id') || 'business-id',
+    name: params.get('name') || 'Sarah\'s Hair Studio',
+    type: params.get('type') || 'Hair & Beauty · Manchester',
+    color: params.get('color') || '#2D8EFF',
+    logo: params.get('logo') || '',
+    services: params.get('services') ? JSON.parse(decodeURIComponent(params.get('services'))) : [],
+    team: params.get('team') ? JSON.parse(decodeURIComponent(params.get('team'))) : [],
+    email: params.get('email') || 'hello@sarahshair.com',
+    phone: params.get('phone') || '+44 161 234 5678',
+    address: params.get('address') || '123 Main St, Manchester, UK'
+  };
+}
+
+// Business data from URL
+const dashboardData = getDashboardParams();
+
+// Helper function to get initials
+function initials(name) {
+  return name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2);
+}
+
+// Populate dashboard with business data
+function populateDashboard() {
+  console.log('populateDashboard called with data:', dashboardData);
+  
+  if (dashboardData.name && dashboardData.name !== 'Sarah\'s Hair Studio') {
+    try {
+      // Update sidebar business info
+      const bizNameEl = document.querySelector('.sb-biz-name');
+      const bizTypeEl = document.querySelector('.sb-biz-sub');
+      const greetingEl = document.querySelector('.tb-greeting');
+      const shareUrlEl = document.querySelector('.share-url');
+      
+      if (bizNameEl) bizNameEl.textContent = dashboardData.name;
+      if (bizTypeEl) bizTypeEl.textContent = dashboardData.type;
+      if (greetingEl) greetingEl.textContent = `Good morning, ${dashboardData.name.split(' ')[0]} 👋`;
+      if (shareUrlEl) shareUrlEl.textContent = `showup.io/book/${dashboardData.id || 'business-id'}`;
+      
+      // Update icon with business initial or logo
+      const icon = document.querySelector('.sb-biz-icon');
+      if (icon) {
+        if (dashboardData.logo) {
+          icon.innerHTML = `<img src="${dashboardData.logo}" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">`;
+        } else {
+          icon.textContent = initials(dashboardData.name);
+          icon.style.background = dashboardData.color;
+        }
+      }
+      
+      // Update brand color
+      document.documentElement.style.setProperty('--accent', dashboardData.color);
+      
+      console.log('Dashboard populated successfully');
+    } catch (error) {
+      console.error('Error populating dashboard:', error);
+    }
+  } else {
+    console.log('Using default dashboard data');
+  }
+}
+
+// Initialize dashboard when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('Dashboard DOM loaded, calling populateDashboard');
+  populateDashboard();
+});
+
+const rev = [680,920,540,1100,860,1380,990,1240];
+const wks = ['W1','W2','W3','W4','W5','W6','W7','W8'];
+const mx = Math.max(...rev);
+const chartEl = document.getElementById('chartBars');
+rev.forEach((v, i) => {
+  const pct = (v / mx) * 100;
+  const isLast = i === rev.length - 1;
+  const wrap = document.createElement('div');
+  wrap.className = 'bar-wrap';
+  wrap.innerHTML = `<div class="bar-el ${isLast ? 'now' : (v > 900 ? 'hi' : '')}" style="height:${pct}%" title="Week ${i+1}: £${v}"></div><div class="bar-lbl">${wks[i]}</div>`;
+  chartEl.appendChild(wrap);
+});
+
+function activateTab(el) {
+  el.closest('.tab-row').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// Handle navigation item clicks
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', (e) => {
+    e.preventDefault();
+    
+    // Remove active class from all nav items
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    
+    // Add active class to clicked item
+    item.classList.add('active');
+    
+    // Get the target section from href
+    const target = item.getAttribute('href').substring(1);
+    
+    // Simple content switching for demo
+    const mainContent = document.querySelector('.content');
+    if (mainContent) {
+      // Hide all sections
+      const sections = ['dashboard', 'bookings', 'customers', 'payments', 'services', 'staff', 'availability', 'reminders', 'appearance', 'settings', 'help', 'crm'];
+      sections.forEach(section => {
+        const sectionEl = document.getElementById(section + '-section');
+        if (sectionEl) sectionEl.style.display = 'none';
+      });
+      
+      // Show target section
+      const targetSection = document.getElementById(target + '-section');
+      if (targetSection) {
+        targetSection.style.display = 'block';
+        console.log('Showing section:', target);
+      } else {
+        // Create a simple placeholder section for demo
+        const placeholderContent = `
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">${target.charAt(0).toUpperCase() + target.slice(1)}</div>
+              <div class="card-sub">${target} section content would go here</div>
+            </div>
+            <div class="card-body">
+              <p style="color: var(--muted);">This is a placeholder for the ${target} section. In a real implementation, this would show relevant ${target} data and functionality.</p>
+            </div>
+          </div>
+        `;
+        
+        const tempDiv = document.createElement('div');
+        tempDiv.id = target + '-section';
+        tempDiv.innerHTML = placeholderContent;
+        mainContent.appendChild(tempDiv);
+      }
+    }
+    
+    // You could implement page switching logic here
+    // For example: showSection(target);
+  });
+});
+</script>
+</body>
+</html>

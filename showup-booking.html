@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book an Appointment — Professional Booking System · Show Up</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,400&family=Cabinet+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+:root {
+  --dark: #000000;
+  --white: #FFFFFF;
+  --blue: #2D8EFF;
+  --blue-dim: rgba(45,142,255,0.12);
+  --blue-mid: rgba(45,142,255,0.25);
+  --muted: #A0A0A0;
+  --muted-mid: #C0C0C0;
+  --card: #1A1A1A;
+  --card-border: rgba(255,255,255,0.1);
+  --card-hover: rgba(255,255,255,0.08);
+  --grid: rgba(255,255,255,0.05);
+  --accent: var(--blue);
+  --accent-dim: var(--blue-dim);
+  --border: var(--card-border);
+  --border-dark: rgba(255,255,255,0.1);
+  --paper: var(--dark);
+  --cream: var(--card);
+  --ink: var(--white);
+  --radius: 4px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.8);
+  --shadow-lg: 0 12px 60px rgba(0,0,0,0.9);
+}
+
+/* BIZ HEADER */
+.biz-header{text-align:center;padding:60px 0 40px;animation:fadeDown .5s ease both;}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+.biz-logo{width:80px;height:80px;border-radius:var(--radius);background:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:900;font-size:1.6rem;color:var(--dark);margin:0 auto 20px;box-shadow:0 12px 32px rgba(45,142,255,0.25);}
+.biz-name{font-family:'Fraunces',serif;font-weight:900;font-size:1.8rem;letter-spacing:-0.02em;color:var(--white);}
+.biz-type{font-size:0.88rem;color:var(--muted-mid);margin-top:6px;font-weight:500;}
+.biz-badges{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:18px;flex-wrap:wrap;}
+.biz-badge{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--card-border);padding:6px 14px;border-radius:999px;font-size:0.76rem;color:var(--muted);font-weight:600;box-shadow:var(--shadow);}
+
+/* STEP DOTS */
+.step-indicator{display:flex;align-items:center;justify-content:center;margin-bottom:28px;animation:fadeDown .4s .1s ease both;}
+.step-dot{width:8px;height:8px;border-radius:50%;background:var(--card-border);transition:all .3s;}
+.step-dot.active{background:var(--blue);transform:scale(1.3);}
+
+/* PANELS */
+.panel{display:none;animation:slideIn .35s cubic-bezier(0.4,0,0.2,1) both;}
+.panel.active{display:block;}
+@keyframes slideIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+
+/* CARD */
+.card{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;animation:fadeUp .4s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.card-header{padding:22px 24px 0;}
+.card-title{font-family:'Fraunces',serif;font-size:1.2rem;font-weight:700;color:var(--white);}
+.card-sub{font-size:0.82rem;color:var(--muted-mid);margin-top:4px;}
+.card-body{padding:20px 24px 24px;}
+
+/* SERVICES */
+.service-list{display:flex;flex-direction:column;gap:10px;}
+.service-item{display:flex;align-items:center;gap:16px;padding:18px 18px;border:1.5px solid var(--card-border);border-radius:var(--radius);cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.service-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--blue);opacity:0;transition:opacity .2s;}
+.service-item:hover{border-color:var(--blue-mid);background:var(--card-hover);}
+.service-item:hover::before{opacity:1;}
+.service-item.selected{border-color:var(--blue);background:var(--blue-dim);}
+.service-item.selected::before{opacity:1;}
+.svc-icon{width:48px;height:48px;background:var(--blue-dim);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;}
+.svc-info{flex:1;}
+.svc-name{font-weight:700;font-size:1rem;color:var(--white);margin-bottom:4px;}
+.svc-meta{font-size:0.82rem;color:var(--muted-mid);}
+.svc-price{font-family:'Fraunces',serif;font-weight:900;font-size:1.4rem;color:var(--blue);margin-top:8px;}
+.svc-check{width:20px;height:20px;border:2px solid var(--card-border);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:0.7rem;transition:all .2s;position:absolute;top:18px;right:18px;}
+.service-item.selected .svc-check{border-color:var(--blue);background:var(--blue);color:var(--dark);}
+
+/* STAFF */
+.staff-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px;}
+.staff-item{display:flex;flex-direction:column;align-items:center;padding:16px;border:1.5px solid var(--card-border);border-radius:var(--radius);cursor:pointer;transition:all .2s;text-align:center;}
+.staff-item:hover{border-color:var(--blue-mid);background:var(--card-hover);}
+.staff-item.selected{border-color:var(--blue);background:var(--blue-dim);}
+.staff-av{width:48px;height:48px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:900;font-size:1rem;color:var(--dark);margin-bottom:8px;}
+.staff-name-s{font-weight:700;font-size:0.88rem;color:var(--white);}
+.staff-role-s{font-size:0.72rem;color:var(--muted-mid);margin-top:2px;}
+.no-pref{grid-column:1/-1;padding:12px;text-align:center;border:1.5px solid var(--card-border);border-radius:var(--radius);cursor:pointer;transition:all .2s;font-size:0.84rem;color:var(--muted);}
+.no-pref:hover{border-color:var(--blue-mid);background:var(--card-hover);color:var(--white);}
+.no-pref.selected{border-color:var(--blue);background:var(--blue-dim);color:var(--blue);}
+
+/* CALENDAR */
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.cal-month{font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;}
+.cal-nav{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--white);cursor:pointer;transition:all .2s;}
+.cal-nav:hover{background:var(--card-hover);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:16px;}
+.cal-dn{font-size:0.7rem;color:var(--muted-mid);text-align:center;padding:8px 0;font-weight:700;}
+.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:var(--radius);font-size:0.84rem;cursor:pointer;transition:all .2s;color:var(--white);}
+.cal-day:hover{background:var(--card-hover);color:var(--blue);}
+.cal-day.selected{background:var(--blue);color:var(--dark);}
+.cal-day.other-month{color:var(--muted);}
+
+/* TIME SLOTS */
+.time-slots{margin-top:16px;}
+.time-slot{padding:10px;border:1.5px solid var(--card-border);border-radius:var(--radius);text-align:center;cursor:pointer;transition:all .2s;margin-bottom:8px;}
+.time-slot:hover{border-color:var(--blue-mid);background:var(--card-hover);}
+.time-slot.selected{border-color:var(--blue);background:var(--blue-dim);color:var(--blue);}
+.time-slot.unavailable{opacity:0.3;cursor:not-allowed;color:var(--muted);}
+
+/* FORMS */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-field{display:flex;flex-direction:column;gap:6px;}
+.form-label{font-size:0.85rem;font-weight:600;color:var(--white);}
+.form-input{padding:12px 16px;background:rgba(255,255,255,0.06);border:1px solid var(--card-border);border-radius:var(--radius);color:var(--white);font-size:0.95rem;transition:all .2s;}
+.form-input::placeholder{color:var(--muted-mid);}
+.form-input:focus{outline:none;border-color:var(--blue);background:rgba(255,255,255,0.08);}
+.payment-options{display:flex;flex-direction:column;gap:12px;}
+.payment-option{display:flex;align-items:flex-start;gap:12px;padding:16px;background:rgba(255,255,255,0.02);border:1px solid var(--card-border);border-radius:var(--radius);cursor:pointer;transition:all .2s;}
+.payment-option:hover{background:rgba(255,255,255,0.04);border-color:var(--blue-mid);}
+.payment-option input[type="radio"]{margin:0;margin-top:2px;}
+.payment-option-content{flex:1;}
+.payment-option-title{font-weight:600;font-size:0.9rem;color:var(--white);margin-bottom:4px;}
+.payment-option-desc{font-size:0.8rem;color:var(--muted);}
+.form-input:focus{border-color:var(--blue);}
+.form-input::placeholder{color:var(--muted);}
+
+/* SUMMARY */
+.summary-card{background:var(--card-hover);border:1px solid var(--card-border);border-radius:var(--radius);padding:16px;}
+.sum-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:0.87rem;}
+.sum-row:not(:last-child){border-bottom:1px solid var(--card-border);}
+.sum-label{color:var(--muted);}
+.sum-val{font-weight:600;}
+.sum-total{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:900;color:var(--blue);}
+
+/* CONFIRMATION SCREEN */
+.confirm-screen{text-align:center;padding:40px 20px;}
+.confirm-icon{font-size:3rem;margin-bottom:16px;}
+.confirm-heading{font-family:'Fraunces',serif;font-weight:900;font-size:1.4rem;margin-bottom:8px;}
+.confirm-sub{color:var(--muted);font-size:0.9rem;margin-bottom:24px;line-height:1.5;}
+.confirm-details{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:20px;margin-bottom:24px;text-align:left;}
+.confirm-row{display:flex;justify-content:space-between;padding:8px 0;font-size:0.9rem;}
+.confirm-row:not(:last-child){border-bottom:1px solid var(--card-border);}
+.confirm-label{color:var(--muted);}
+
+/* BUTTONS */
+.btn-primary{background:var(--blue);color:var(--dark);border:none;padding:16px 32px;border-radius:var(--radius);font-family:'Cabinet Grotesk',sans-serif;font-weight:800;font-size:0.94rem;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;}
+.btn-primary:hover{background:#1A7AEE;transform:translateY(-2px);box-shadow:0 8px 28px rgba(45,142,255,0.25);}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+.btn-back-sm{background:none;color:var(--muted);border:none;padding:8px 12px;border-radius:var(--radius);font-family:'Cabinet Grotesk',sans-serif;font-weight:600;font-size:0.84rem;cursor:pointer;transition:color .2s;margin-bottom:12px;}
+.btn-back-sm:hover{color:var(--white);}
+
+/* PAYMENT */
+#card-element{background:var(--card);padding:12px;border:1px solid var(--card-border);border-radius:var(--radius);margin-bottom:16px;}
+#card-errors{color:#EF4444;font-size:0.8rem;margin-bottom:16px;}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+
+/* CONFIRM SCREEN */
+.confirm-screen{text-align:center;padding:20px 0;}
+.confirm-icon{width:80px;height:80px;border-radius:50%;background:var(--blue-dim);display:flex;align-items:center;justify-content:center;font-size:2.2rem;margin:0 auto 20px;color:var(--blue);animation:pop .5s cubic-bezier(0.34,1.56,0.64,1) both;}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.confirm-heading{font-family:'Fraunces',serif;font-size:2rem;font-weight:900;margin-bottom:10px;letter-spacing:-0.02em;}
+.confirm-sub{font-size:0.9rem;color:var(--muted);line-height:1.6;max-width:340px;margin:0 auto 26px;}
+.confirm-detail{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:18px;margin-bottom:18px;text-align:left;}
+.confirm-row{display:flex;align-items:center;gap:12px;font-size:0.87rem;padding:7px 0;}
+.confirm-row:not(:last-child){border-bottom:1px solid var(--card-border);}
+.confirm-actions{display:flex;flex-direction:column;gap:10px;}
+.btn-outline{width:100%;background:none;color:var(--white);border:1.5px solid var(--card-border);padding:14px;border-radius:var(--radius);font-family:'Cabinet Grotesk',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;transition:all .2s;}
+.btn-outline:hover{border-color:var(--white);}
+
+/* POWERED */
+.powered-by{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--card-border);border-radius:999px;padding:7px 16px;font-size:0.72rem;color:var(--muted);margin-top:14px;box-shadow:var(--shadow);}
+.powered-by strong{color:var(--white);}
+
+.page-footer{text-align:center;margin-top:32px;font-size:0.74rem;color:var(--muted);}
+.page-footer a{color:var(--muted);text-decoration:none;}
+.page-footer a:hover{color:var(--blue);}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- BIZ HEADER -->
+  <div class="biz-header">
+    <div class="biz-logo" id="bizLogo">SH</div>
+    <div class="biz-name" id="bizName">Sarah's Hair Studio</div>
+    <div class="biz-type" id="bizType">Hair & Beauty · Manchester</div>
+    <div class="biz-badges">
+      <span class="biz-badge">⭐ 4.9 · 212 reviews</span>
+      <span class="biz-badge">✓ Instant confirmation</span>
+      <span class="biz-badge">🔔 Reminders sent</span>
+    </div>
+  </div>
+
+  <!-- STEP INDICATOR -->
+  <div class="step-indicator">
+    <div class="step-dot active"></div>
+    <div class="step-dot"></div>
+    <div class="step-dot"></div>
+    <div class="step-dot"></div>
+    <div class="step-dot"></div>
+  </div>
+
+  <!-- PANEL 1: SERVICE -->
+  <div class="panel active" id="panel1">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Choose a service</div><div class="card-sub">Select what you'd like to book</div></div>
+      <div class="card-body">
+        <div class="service-list">
+          <div class="service-item" onclick="selectService(this,'Cut & Blowdry','45 mins','45')">
+            <div class="svc-icon">✂️</div>
+            <div class="svc-info"><div class="svc-name">Cut & Blowdry</div><div class="svc-meta">45 mins · No deposit needed</div></div>
+            <div class="svc-price">£45</div><div class="svc-check"></div>
+          </div>
+          <div class="service-item" onclick="selectService(this,'Full Head Colour','2 hours','95')">
+            <div class="svc-icon">🎨</div>
+            <div class="svc-info"><div class="svc-name">Full Head Colour</div><div class="svc-meta">2 hours · £25 deposit to confirm</div></div>
+            <div class="svc-price">£95</div><div class="svc-check"></div>
+          </div>
+          <div class="service-item" onclick="selectService(this,'Balayage','3 hours','130')">
+            <div class="svc-icon">🌟</div>
+            <div class="svc-info"><div class="svc-name">Balayage</div><div class="svc-meta">3 hours · £35 deposit to confirm</div></div>
+            <div class="svc-price">£130</div><div class="svc-check"></div>
+          </div>
+          <div class="service-item" onclick="selectService(this,'Blow Dry','30 mins','30')">
+            <div class="svc-icon">💨</div>
+            <div class="svc-info"><div class="svc-name">Blow Dry</div><div class="svc-meta">30 mins · No deposit needed</div></div>
+            <div class="svc-price">£30</div><div class="svc-check"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:12px;">
+      <button class="btn-primary" onclick="goPanel(2)" id="serviceNextBtn" style="opacity:0.35;pointer-events:none;">Continue →</button>
+    </div>
+  </div>
+
+  <!-- PANEL 2: STAFF + DATE -->
+  <div class="panel" id="panel2">
+    <button class="btn-back-sm" onclick="goPanel(1)">← Back</button>
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-header"><div class="card-title">Choose your stylist</div><div class="card-sub">Or select no preference</div></div>
+      <div class="card-body">
+        <div class="staff-grid">
+          <div class="staff-item" onclick="selectStaff(this,'Sarah J.')">
+            <div class="staff-av">SJ</div>
+            <div class="staff-name-s">Sarah Johnson</div>
+            <div class="staff-role-s">Senior Stylist</div>
+          </div>
+          <div class="staff-item" onclick="selectStaff(this,'Maya R.')">
+            <div class="staff-av" style="background:#2d5be3;">MR</div>
+            <div class="staff-name-s">Maya Roberts</div>
+            <div class="staff-role-s">Colour Specialist</div>
+          </div>
+          <div class="no-pref" onclick="selectStaff(this,'No preference')">🎲 No preference — anyone available</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Pick a date & time</div><div class="card-sub">All times in GMT</div></div>
+      <div class="card-body">
+        <div class="cal-header">
+          <button class="cal-nav" onclick="changeMonth(-1)">‹</button>
+          <div class="cal-month" id="calMonth">April 2026</div>
+          <button class="cal-nav" onclick="changeMonth(1)">›</button>
+        </div>
+        <div class="cal-grid" id="calGrid">
+          <div class="cal-dn">Mo</div><div class="cal-dn">Tu</div><div class="cal-dn">We</div><div class="cal-dn">Th</div><div class="cal-dn">Fr</div><div class="cal-dn">Sa</div><div class="cal-dn">Su</div>
+        </div>
+        <div class="time-slots" id="timeSlotsWrap" style="display:none;">
+          <div style="font-size:0.8rem;color:var(--muted);margin-bottom:8px;" id="selectedDateLabel"></div>
+          <div class="time-slots" id="timeSlots"></div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <button class="btn-primary" onclick="goPanel(3)" id="dateNextBtn" style="opacity:0.35;pointer-events:none;">Continue →</button>
+    </div>
+  </div>
+
+  <!-- PANEL 3: DETAILS -->
+  <div class="panel" id="panel3">
+    <button class="btn-back-sm" onclick="goPanel(2)">← Back</button>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Your details</div><div class="card-sub">How should we contact you?</div></div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">Full name</label>
+          <input type="text" class="form-input" id="clientName" placeholder="Your name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" id="clientEmail" placeholder="your@email.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input type="tel" class="form-input" id="clientPhone" placeholder="+44 123 456 7890">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes (optional)</label>
+          <textarea class="form-input" id="clientNotes" placeholder="Any special requests or notes..." rows="3"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <div class="card-header"><div class="card-title">Payment method</div><div class="card-sub">Choose how you'd like to pay</div></div>
+      <div class="card-body">
+        <div class="payment-options">
+          <label class="payment-option">
+            <input type="radio" name="paymentMethod" value="online" checked>
+            <div class="payment-option-content">
+              <div class="payment-option-title">💳 Pay Online Now</div>
+              <div class="payment-option-desc">Secure payment with card. Instant confirmation.</div>
+            </div>
+          </label>
+          <label class="payment-option">
+            <input type="radio" name="paymentMethod" value="at_appointment">
+            <div class="payment-option-content">
+              <div class="payment-option-title">💵 Pay at Appointment</div>
+              <div class="payment-option-desc">Pay when you arrive. Cash or card accepted.</div>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><button class="btn-primary" onclick="goPanel(4)">Review Booking →</button></div>
+  </div>
+
+  <!-- PANEL 4: REVIEW & CONFIRM -->
+  <div class="panel" id="panel4">
+    <button class="btn-back-sm" onclick="goPanel(3)">← Back</button>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Review your booking</div><div class="card-sub">Please confirm all details are correct</div></div>
+      <div class="card-body">
+        <div class="summary-card">
+          <div class="sum-row"><span class="sum-label">Service</span><span class="sum-val" id="sumService">—</span></div>
+          <div class="sum-row"><span class="sum-label">Staff</span><span class="sum-val" id="sumStaff">—</span></div>
+          <div class="sum-row"><span class="sum-label">Date</span><span class="sum-val" id="sumDate">—</span></div>
+          <div class="sum-row"><span class="sum-label">Time</span><span class="sum-val" id="sumTime">—</span></div>
+          <div class="sum-row"><span class="sum-label">Name</span><span class="sum-val" id="sumName">—</span></div>
+          <div class="sum-row"><span class="sum-label">Email</span><span class="sum-val" id="sumEmail">—</span></div>
+          <div class="sum-row"><span class="sum-label">Payment</span><span class="sum-val" id="sumPayment">—</span></div>
+          <div class="sum-row sum-total"><span class="sum-label">Total</span><span class="sum-val" id="sumPrice">—</span></div>
+        </div>
+        
+        <div style="margin-top: 20px;">
+          <button class="btn-primary" onclick="submitBooking()" id="submitBookingBtn">Submit Booking Request</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 5: CONFIRMATION -->
+  <div class="panel" id="panel5">
+    <div class="confirm-screen">
+      <div class="confirm-icon">📅</div>
+      <div class="confirm-heading">Booking Request Submitted!</div>
+      <div class="confirm-sub">Your booking request has been sent to the business. You'll receive a confirmation email and SMS once they approve your booking.</div>
+      <div class="confirm-details">
+        <div class="confirm-row"><span class="confirm-label">Service:</span><span id="confirmService">—</span></div>
+        <div class="confirm-row"><span class="confirm-label">Date:</span><span id="confirmDate">—</span></div>
+        <div class="confirm-row"><span class="confirm-label">Time:</span><span id="confirmTime">—</span></div>
+      </div>
+      <button class="btn-primary" onclick="window.location.reload()">Book Another Appointment</button>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <a href="/terms">Terms</a> • <a href="/privacy">Privacy</a> • <a href="/contact">Contact</a>
+    <div class="powered-by">Powered by <strong>Show Up Media</strong></div>
+  </div>
+
+</div>
+
+<script>
+// Get URL parameters
+function getUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  console.log('=== BOOKING PAGE URL PARAMETERS ===');
+  console.log('Full URL:', window.location.href);
+  console.log('Search string:', window.location.search);
+  console.log('Raw params:', Object.fromEntries(params.entries()));
+  
+  const businessData = {
+    name: params.get('name') || 'Sarah\'s Hair Studio',
+    type: params.get('type') || 'Hair & Beauty · Manchester',
+    color: params.get('color') || '#2D8EFF',
+    logo: params.get('logo') || '',
+    services: params.get('services') ? JSON.parse(decodeURIComponent(params.get('services'))) : [],
+    team: params.get('team') ? JSON.parse(decodeURIComponent(params.get('team'))) : []
+  };
+  
+  console.log('Parsed business data:', businessData);
+  return businessData;
+}
+
+// Business data from URL
+const businessData = getUrlParams();
+
+// Initialize Stripe
+const stripe = Stripe('pk_test_51234567890abcdef'); // Use test key for development
+const elements = stripe.elements();
+
+// Populate business data when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  populateBusinessData();
+});
+
+// Populate business data from URL parameters
+function populateBusinessData() {
+  console.log('populateBusinessData called with:', businessData);
+  
+  // Only populate if we have actual business data (not defaults)
+  if (businessData.name && businessData.name !== 'Sarah\'s Hair Studio') {
+    console.log('Updating with real business data');
+    
+    // Update business header
+    document.querySelector('.biz-name').textContent = businessData.name;
+    document.querySelector('.biz-type').textContent = businessData.type;
+    
+    // Update logo
+    const logoEl = document.querySelector('.biz-logo');
+    if (businessData.logo) {
+      logoEl.innerHTML = `<img src="${businessData.logo}" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">`;
+    } else {
+      logoEl.textContent = initials(businessData.name);
+      logoEl.style.background = businessData.color;
+    }
+    
+    // Update brand color
+    document.documentElement.style.setProperty('--accent', businessData.color);
+    
+    // Only update services if we have custom services
+    if (businessData.services && businessData.services.length > 0) {
+      const servicesContainer = document.querySelector('.service-list');
+      if (servicesContainer) {
+        servicesContainer.innerHTML = businessData.services.map(service => `
+          <div class="service-item" onclick="selectService(this, '${service.name}', ${service.duration}, ${service.price})">
+            <div class="svc-icon">${getServiceIcon(service.name)}</div>
+            <div class="svc-info">
+              <div class="svc-name">${service.name}</div>
+              <div class="svc-meta">${service.duration} mins${service.desc ? ' · ' + service.desc : ''}</div>
+            </div>
+            <div class="svc-price">£${service.price.toFixed(2)}</div>
+            <div class="svc-check"></div>
+          </div>
+        `).join('');
+      }
+    }
+    
+    // Only update team if we have custom team members
+    if (businessData.team && businessData.team.length > 0) {
+      const staffContainer = document.querySelector('.staff-grid');
+      if (staffContainer) {
+        staffContainer.innerHTML = businessData.team.map(member => `
+          <div class="staff-item" onclick="selectStaff(this, '${member.name}')">
+            <div class="staff-avatar" style="background:${businessData.color}">${initials(member.name)}</div>
+            <div class="staff-name">${member.name.split(' ')[0]}</div>
+          </div>
+        `).join('');
+      }
+    }
+  } else {
+    console.log('Using default booking data');
+  }
+}
+
+// Helper function to get service icons
+function getServiceIcon(serviceName) {
+  const icons = {
+    'Cut & Blowdry': '✂️',
+    'Full Head Colour': '🎨',
+    'Balayage': '🌟',
+    'Blow Dry': '💨'
+  };
+  return icons[serviceName] || '💇';
+}
+
+// Booking data
+let booking = {
+  service: '',
+  serviceName: '',
+  price: 0,
+  staff: '',
+  date: '',
+  time: '',
+  customer: {
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    notes: ''
+  }
+};
+
+// Create card element
+const cardElement = elements.create('card', {
+  style: {
+    base: {
+      color: '#FFFFFF',
+      backgroundColor: '#1A1A1A',
+      fontSize: '16px',
+      '::placeholder': {
+        color: '#A0A0A0'
+      }
+    }
+  }
+});
+cardElement.mount('#card-element');
+
+// Handle real-time validation errors
+cardElement.on('change', ({error}) => {
+  const displayError = document.getElementById('card-errors');
+  if (error) {
+    displayError.textContent = error.message;
+  } else {
+    displayError.textContent = '';
+  }
+});
+
+// Handle form submission
+const form = document.getElementById('payment-form');
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  
+  // Collect customer details
+  booking.customer.firstName = document.getElementById('firstName').value;
+  booking.customer.lastName = document.getElementById('lastName').value;
+  booking.customer.email = document.getElementById('email').value;
+  booking.customer.phone = document.getElementById('phone').value;
+  booking.customer.notes = document.getElementById('notes').value;
+  
+  setLoading(true);
+  
+  // For demo purposes, simulate successful payment
+  setTimeout(() => {
+    setLoading(false);
+    showConfirmation();
+  }, 2000);
+  
+  // In production, you would use:
+  // const {error, paymentIntent} = await stripe.confirmCardPayment(clientSecret, {...});
+});
+
+function setLoading(isLoading) {
+  const submitButton = document.getElementById('submit-button');
+  const buttonText = document.getElementById('button-text');
+  const spinner = document.getElementById('spinner');
+  
+  if (isLoading) {
+    submitButton.disabled = true;
+    buttonText.style.display = 'none';
+    spinner.style.display = 'block';
+    spinner.style.width = '16px';
+    spinner.style.height = '16px';
+    spinner.style.border = '2px solid transparent';
+    spinner.style.borderTop = '2px solid var(--dark)';
+    spinner.style.borderRadius = '50%';
+    spinner.style.animation = 'spin 1s linear infinite';
+  } else {
+    submitButton.disabled = false;
+    buttonText.style.display = 'inline';
+    spinner.style.display = 'none';
+  }
+}
+
+function showConfirmation() {
+  goPanel(5);
+  populateConfirmation();
+}
+
+// Panel navigation
+function goPanel(n){
+  if(n<currentStep||!validateStep(currentStep))return;
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.step-dot').forEach((d,i)=>{d.classList.toggle('active',i<n);});
+  document.getElementById('panel'+n).classList.add('active');
+  currentStep=n;
+  window.scrollTo(0,0);
+  
+  // Update summary when going to review panel
+  if (n === 4) {
+    updateSummary();
+  }
+}
+
+function updateSummary() {
+  const service = selectedService;
+  const staff = selectedStaff || 'Any available';
+  const date = selectedDate;
+  const time = selectedTime;
+  const clientName = document.getElementById('clientName').value;
+  const clientEmail = document.getElementById('clientEmail').value;
+  const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+  
+  document.getElementById('sumService').textContent = service ? service.name : '—';
+  document.getElementById('sumStaff').textContent = staff;
+  document.getElementById('sumDate').textContent = formatDate(date) || '—';
+  document.getElementById('sumTime').textContent = time || '—';
+  document.getElementById('sumName').textContent = clientName || '—';
+  document.getElementById('sumEmail').textContent = clientEmail || '—';
+  document.getElementById('sumPayment').textContent = paymentMethod === 'online' ? 'Pay Online Now' : 'Pay at Appointment';
+  document.getElementById('sumPrice').textContent = service ? `£${service.price.toFixed(2)}` : '—';
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+// Submit booking request
+async function submitBooking() {
+  const btn = document.getElementById('submitBookingBtn');
+  const originalText = btn.textContent;
+  
+  // Show loading state
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+  
+  try {
+    const bookingData = {
+      businessId: businessData.id || 'test-business-id',
+      serviceId: selectedService?.id || '1',
+      serviceName: selectedService?.name || 'Test Service',
+      staffId: selectedStaff?.id || null,
+      staffName: selectedStaff?.name || 'Any available',
+      date: selectedDate,
+      time: selectedTime,
+      duration: selectedService?.duration || 60,
+      price: selectedService?.price || 50,
+      clientName: document.getElementById('clientName').value,
+      clientEmail: document.getElementById('clientEmail').value,
+      clientPhone: document.getElementById('clientPhone').value,
+      clientNotes: document.getElementById('clientNotes').value,
+      paymentMethod: document.querySelector('input[name="paymentMethod"]:checked').value,
+      businessName: businessData.name || 'Test Business',
+      businessEmail: businessData.email || 'test@example.com',
+      businessPhone: businessData.phone || '+44 161 234 5678',
+      businessAddress: businessData.address || '123 Main St, Manchester, UK'
+    };
+    
+    const response = await fetch('/api/bookings', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(bookingData)
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      // Update confirmation screen
+      document.getElementById('confirmService').textContent = data.serviceName;
+      document.getElementById('confirmDate').textContent = formatDate(data.date);
+      document.getElementById('confirmTime').textContent = data.time;
+      
+      // Show confirmation
+      goPanel(5);
+    } else {
+      throw new Error(data.error || 'Failed to submit booking');
+    }
+    
+  } catch (error) {
+    console.error('Booking submission error:', error);
+    alert('Failed to submit booking: ' + error.message);
+    
+    // Reset button
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+}
+
+// Service selection
+function selectService(el, name, duration, price) {
+  document.querySelectorAll('.service-item').forEach(i => i.classList.remove('selected'));
+  el.classList.add('selected');
+  booking.service = name;
+  booking.serviceName = name;
+  booking.price = parseFloat(price);
+  
+  // Enable next button
+  document.getElementById('serviceNextBtn').style.opacity = '1';
+  document.getElementById('serviceNextBtn').style.pointerEvents = 'auto';
+}
+
+// Staff selection
+function selectStaff(el, name) {
+  document.querySelectorAll('.staff-item, .no-pref').forEach(i => i.classList.remove('selected'));
+  el.classList.add('selected');
+  booking.staff = name;
+}
+
+// Calendar variables
+let curMonth = new Date().getMonth();
+let curYear = new Date().getFullYear();
+
+// Date selection
+function selectDate(el, day) {
+  document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('selected'));
+  el.classList.add('selected');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const date = new Date(curYear, curMonth, day);
+  booking.date = `${days[date.getDay()]} ${day} ${months[curMonth]}`;
+  
+  // Show time slots
+  document.getElementById('timeSlotsWrap').style.display = 'block';
+  document.getElementById('selectedDateLabel').textContent = booking.date;
+  renderSlots();
+  booking.time = null;
+  updateDateButton();
+}
+
+// Time selection
+function selectTime(el, time) {
+  document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+  booking.time = time;
+  updateDateButton();
+}
+
+function updateDateButton() {
+  const btn = document.getElementById('dateNextBtn');
+  const ok = booking.date && booking.time && booking.staff;
+  btn.style.opacity = ok ? '1' : '0.35';
+  btn.style.pointerEvents = ok ? 'auto' : 'none';
+}
+
+// Calendar functions
+function renderCalendar() {
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('calMonth').textContent = `${months[curMonth]} ${curYear}`;
+  
+  const firstDay = new Date(curYear, curMonth, 1).getDay();
+  const daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
+  const today = new Date();
+  
+  let html = '';
+  // Add empty cells for days before month starts
+  for (let i = 0; i < firstDay; i++) {
+    html += '<div></div>';
+  }
+  
+  // Add days of the month
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = new Date(curYear, curMonth, day);
+    const isPast = date < today.setHours(0,0,0,0);
+    const isToday = date.toDateString() === new Date().toDateString();
+    
+    html += `<div class="cal-day ${isPast ? 'past' : ''} ${isToday ? 'today' : ''}" onclick="${!isPast ? `selectDate(this, ${day})` : ''}">${day}</div>`;
+  }
+  
+  document.getElementById('calGrid').innerHTML = html;
+}
+
+function changeMonth(dir) {
+  curMonth += dir;
+  if (curMonth > 11) { curMonth = 0; curYear++; }
+  if (curMonth < 0) { curMonth = 11; curYear--; }
+  renderCalendar();
+  document.getElementById('timeSlotsWrap').style.display = 'none';
+  booking.date = null; 
+  booking.time = null;
+  updateDateButton();
+}
+
+function renderSlots() {
+  const slots = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','1:00 PM','2:00 PM','2:30 PM','3:00 PM','4:00 PM'];
+  const unavail = [2, 5, 9]; // Example unavailable slots
+  const wrap = document.getElementById('timeSlots');
+  wrap.innerHTML = '';
+  
+  slots.forEach((t, i) => {
+    const el = document.createElement('div');
+    el.className = 'time-slot' + (unavail.includes(i) ? ' unavailable' : '');
+    el.textContent = t;
+    if (!unavail.includes(i)) el.onclick = () => selectTime(el, t);
+    wrap.appendChild(el);
+  });
+}
+
+// Populate summary
+function populateSummary() {
+  document.getElementById('sumService').textContent = booking.serviceName || '—';
+  document.getElementById('sumStaff').textContent = booking.staff || '—';
+  document.getElementById('sumDate').textContent = booking.date || '—';
+  document.getElementById('sumTime').textContent = booking.time || '—';
+  document.getElementById('sumPrice').textContent = booking.price ? `£${booking.price}` : '—';
+}
+
+// Populate confirmation
+function populateConfirmation() {
+  document.getElementById('confService').textContent = booking.serviceName;
+  document.getElementById('confDate').textContent = `${booking.date} · ${booking.time}`;
+  document.getElementById('confStaff').textContent = booking.staff || 'Any available';
+}
+
+// Initialize calendar
+renderCalendar();
+
+// Populate business data from URL parameters
+function populateBusinessData() {
+  // Update business header
+  document.getElementById('bizName').textContent = businessData.name;
+  document.getElementById('bizType').textContent = businessData.type;
+  
+  // Update logo
+  const logoElement = document.getElementById('bizLogo');
+  if (businessData.logo) {
+    logoElement.innerHTML = `<img src="${businessData.logo}" style="width:100%;height:100%;object-fit:contain;border-radius:var(--radius);">`;
+  } else {
+    logoElement.style.background = businessData.color;
+    logoElement.textContent = businessData.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  }
+  
+  // Update services
+  if (businessData.services.length > 0) {
+    const servicesList = document.querySelector('.service-list');
+    servicesList.innerHTML = businessData.services.map((service, index) => `
+      <div class="service-item" onclick="selectService(this,'${service.name}','${service.duration} mins','${service.price}')">
+        <div class="svc-icon">✂️</div>
+        <div class="svc-info"><div class="svc-name">${service.name}</div><div class="svc-meta">${service.duration} mins · No deposit needed</div></div>
+        <div class="svc-price">£${service.price}</div><div class="svc-check"></div>
+      </div>
+    `).join('');
+  }
+  
+  // Update team members
+  if (businessData.team.length > 0) {
+    const staffGrid = document.querySelector('.staff-grid');
+    const teamHtml = businessData.team.map((member, index) => `
+      <div class="staff-item" onclick="selectStaff(this,'${member.name}')">
+        <div class="staff-av" style="background:${businessData.color};">${member.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}</div>
+        <div class="staff-name-s">${member.name}</div>
+        <div class="staff-role-s">${member.role || 'Team Member'}</div>
+      </div>
+    `).join('');
+    
+    // Insert before "no preference" option
+    const noPrefElement = document.querySelector('.no-pref');
+    noPrefElement.insertAdjacentHTML('beforebegin', teamHtml);
+  }
+  
+  // Update CSS custom properties for brand color
+  document.documentElement.style.setProperty('--blue', businessData.color);
+}
+
+// Call the function when page loads
+populateBusinessData();
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "showup-booking-system",
+  "version": "1.0.0",
+  "description": "Show Up booking system backend",
+  "scripts": {
+    "dev": "netlify dev",
+    "deploy": "netlify deploy --prod"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "resend": "^3.2.0",
+    "stripe": "^14.18.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  }
+}
