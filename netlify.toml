@@ -18,6 +18,12 @@
   to = "/.netlify/functions/stripe-webhook"
   status = 200
 
+# Root URL redirect to landing page
+[[redirects]]
+  from = "/"
+  to = "/showup-landing.html"
+  status = 200
+
 # SPA fallback for auth pages
 [[redirects]]
   from = "/dashboard"
