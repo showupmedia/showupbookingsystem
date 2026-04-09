@@ -61,7 +61,7 @@ async function sendBusinessWelcome({ business, loginEmail, tempPassword }) {
       <p>Hi ${business.name},</p>
       <p>Your account is set up and your booking page is live. Here are your details:</p>
       <div class="detail-box">
-        <div class="detail-row"><span class="detail-label">Booking Page</span><span class="detail-val">showup.io/book/${business.slug}</span></div>
+        <div class="detail-row"><span class="detail-label">Booking Page</span><span class="detail-val">app.showupmedia.org/book/${business.slug}</span></div>
         <div class="detail-row"><span class="detail-label">Dashboard Login</span><span class="detail-val">${loginEmail}</span></div>
         <div class="detail-row"><span class="detail-label">Temporary Password</span><span class="detail-val">${tempPassword}</span></div>
         <div class="detail-row"><span class="detail-label">Plan</span><span class="detail-val">${business.stripe_plan === 'annual' ? 'Annual — £99/yr' : 'Monthly — £15/mo'}</span></div>

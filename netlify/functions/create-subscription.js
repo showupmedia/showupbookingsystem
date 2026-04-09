@@ -19,6 +19,41 @@ function generatePassword(length = 12) {
   return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
 }
 
+// Create test account without Stripe payment - simplified version
+async function createTestAccount(bizData, supabase) {
+  try {
+    console.log('Creating test account for:', bizData.email);
+    
+    // Generate test data without using external services
+    const tempPassword = generatePassword();
+    const businessId = 'test-' + Date.now();
+    const slug = slugify(bizData.name) + '-' + Date.now().toString().slice(-4);
+    
+    console.log('Generated test data:', { businessId, slug });
+
+    // Skip all database operations for testing - just return success
+    return ok({
+      businessId,
+      slug,
+      tempPassword,
+      testMode: true,
+      message: 'Test account created successfully! Database operations skipped for testing.',
+      bizData: {
+        name: bizData.name,
+        email: bizData.email,
+        type: bizData.type,
+        color: bizData.color,
+        services: bizData.services?.length || 0,
+        team: bizData.team?.length || 0
+      }
+    });
+
+  } catch (e) {
+    console.error('createTestAccount error:', e);
+    return err(e.message || 'Internal server error', 500);
+  }
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return options();
   if (event.httpMethod !== 'POST') return err('Method not allowed', 405);
@@ -34,14 +69,20 @@ exports.handler = async (event) => {
   }
 
   const {
-    plan,          // 'monthly' | 'annual'
+    plan,          // 'monthly' | 'annual' | 'test_free'
     cardNumber, cardExpiry, cardCvc, cardName,
-    bizData        // full business object from onboarding
+    bizData,       // full business object from onboarding
+    testMode = false
   } = body;
 
-  // ── Validate ─────────────────────────────────────────────
+  // Validate 
   if (!plan || !bizData?.email || !bizData?.name) {
     return err('Missing required fields');
+  }
+
+  // Handle test mode - skip Stripe processing
+  if (plan === 'test_free' || testMode) {
+    return await createTestAccount(bizData, supabase);
   }
 
   const priceId = plan === 'annual'
