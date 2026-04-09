@@ -622,15 +622,27 @@ input[type="color"].swatch{padding:0;overflow:hidden;}
     <div class="plan-details" id="planDetails"></div>
     <div class="payment-form">
       <span class="payment-form-lbl">Payment Details</span>
-      <div class="stripe-box">
-        <div id="card-element">
-          <!-- Stripe Elements will be inserted here -->
-        </div>
-        <div id="card-errors" style="color:#ff4d4d;font-size:0.78rem;margin-top:8px;min-height:18px;"></div>
+      
+      <!-- Test Mode Toggle -->
+      <div style="margin-bottom: 16px; padding: 12px; background: rgba(45,142,255,0.1); border: 1px solid rgba(45,142,255,0.2); border-radius: 8px;">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+          <input type="checkbox" id="testMode" onchange="toggleTestMode()" style="width: 16px; height: 16px;">
+          <span style="font-size: 0.85rem; color: var(--blue); font-weight: 600;"> Test Mode - Skip Payment (£0)</span>
+        </label>
       </div>
-      <div class="stripe-secure">🔒 Payments secured by Stripe. Your card details are never stored.</div>
+      
+      <div id="paymentFields">
+        <div class="stripe-box">
+          <div id="card-element">
+            <!-- Stripe Elements will be inserted here -->
+          </div>
+          <div id="card-errors" style="color:#ff4d4d;font-size:0.78rem;margin-top:8px;min-height:18px;"></div>
+        </div>
+        <div class="stripe-secure"> Payments secured by Stripe. Your card details are never stored.</div>
+      </div>
+      
       <button class="btn-pay" id="payBtn" onclick="processPayment()">
-        <span id="pay-btn-text">Pay & Go Live →</span>
+        <span id="pay-btn-text">Pay & Go Live</span>
         <div id="spinner" style="display:none;width:16px;height:16px;border:2px solid rgba(0,0,0,0.2);border-top:2px solid #000;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
       </button>
     </div>
@@ -1068,10 +1080,11 @@ function openPayment(){
   document.getElementById('paymentModal').classList.add('show');
   document.body.style.overflow = 'hidden';
   
-  // Initialize Stripe Elements
-  const stripe = Stripe(window.STRIPE_PUBLISHABLE_KEY || 'pk_test_...');
-  const elements = stripe.elements();
-  const cardElement = elements.create('card', {
+  // Initialize global Stripe Elements (only once)
+if (!window.stripeInstance) {
+  window.stripeInstance = Stripe(window.STRIPE_PUBLISHABLE_KEY || 'pk_test_...');
+  window.elementsInstance = window.stripeInstance.elements();
+  window.cardElement = window.elementsInstance.create('card', {
     style: {
       base: {
         fontSize: '16px',
@@ -1082,7 +1095,8 @@ function openPayment(){
       },
     },
   });
-  cardElement.mount('#card-element');
+  window.cardElement.mount('#card-element');
+}
 
   // Reset form
   ['card-number','card-expiry','card-cvc','card-name'].forEach(id => document.getElementById(id).value = '');
@@ -1093,6 +1107,24 @@ function openPayment(){
   document.getElementById('spinner').style.display = 'none';
 }
 function closePayment(){document.getElementById('paymentModal').classList.remove('show');document.body.style.overflow='';}
+
+// Toggle test mode
+function toggleTestMode() {
+  const isTestMode = document.getElementById('testMode').checked;
+  const paymentFields = document.getElementById('paymentFields');
+  const payBtnText = document.getElementById('pay-btn-text');
+  
+  if (isTestMode) {
+    paymentFields.style.display = 'none';
+    payBtnText.textContent = 'Create Free Test Account';
+  } else {
+    paymentFields.style.display = 'block';
+    const plan = currentPlan || 'monthly';
+    const labels = {monthly:'Pay £15/month & Go Live',annual:'Pay £99/year & Go Live'};
+    payBtnText.textContent = labels[plan];
+  }
+}
+
 function selectPlan(p){
   currentPlan=p;
   ['monthly','annual'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('active',t===p));
@@ -1118,6 +1150,61 @@ async function processPayment(){
   sp.style.display = 'block';
 
   try {
+    // Check if test mode is enabled
+    const isTestMode = document.getElementById('testMode').checked;
+    
+    if (isTestMode) {
+      // Test mode - create account without payment
+      console.log('Test mode enabled, creating account...');
+      console.log('Business data:', biz);
+      
+      // Validate required fields
+      if (!biz.name || !biz.type || !biz.email || !biz.phone || !biz.address) {
+        console.error('Missing required business data:', {
+          name: !!biz.name,
+          type: !!biz.type,
+          email: !!biz.email,
+          phone: !!biz.phone,
+          address: !!biz.address
+        });
+        alert('Please complete all required business information before creating a test account.');
+        btn.disabled = false;
+        btn.textContent = 'Create Free Test Account';
+        sp.style.display = 'none';
+        return;
+      }
+      
+      const requestBody = {
+        plan: 'test_free',
+        bizData: biz,
+        testMode: true
+      };
+      
+      console.log('Request body:', requestBody);
+      
+      const res = await fetch('/api/create-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      });
+      
+      console.log('Response status:', res.status);
+      const data = await res.json();
+      console.log('Response data:', data);
+      
+      if (!res.ok) {
+        console.error('API error:', data);
+        throw new Error(data.error || 'Failed to create test account');
+      }
+      
+      // Show success immediately for test mode
+      document.getElementById('paymentModal').classList.remove('show');
+      document.getElementById('successScreen').classList.add('show');
+      document.getElementById('successUrl').textContent = `app.showupmedia.org/book/${data.slug}`;
+      console.log('Test account created successfully');
+      return;
+    }
+
     // 1. Create subscription + get Stripe client_secret
     const res = await fetch('/api/create-subscription', {
       method: 'POST',
@@ -1131,9 +1218,8 @@ async function processPayment(){
     if (!res.ok) throw new Error(data.error);
 
     // 2. Use existing Stripe Elements
-    const stripe = Stripe(window.STRIPE_PUBLISHABLE_KEY || 'pk_test_...');
-    const elements = stripe.elements();
-    const cardElement = elements.getElement('card');
+    const stripe = window.stripeInstance;
+    const cardElement = window.cardElement;
     
     // 3. Confirm payment with Stripe.js
     const { error, paymentIntent } = await stripe.confirmCardPayment(data.clientSecret, {

@@ -213,7 +213,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opa
   <div class="sb-footer">
     <div class="share-box">
       <div class="share-lbl">Your Booking Link</div>
-      <div class="share-url">showup.io/book/sarahs-studio</div>
+      <div class="share-url">app.showupmedia.org/book/sarahs-studio</div>
       <button class="copy-sm" onclick="this.textContent='Copied! ✓';setTimeout(()=>this.textContent='Copy Link',2000)">Copy Link</button>
     </div>
   </div>
@@ -444,76 +444,136 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opa
   </div>
 </div>
 
+<script src="https://js.stripe.com/v3/"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// Get URL parameters for dashboard preview
-function getDashboardParams() {
-  const params = new URLSearchParams(window.location.search);
-  return {
-    id: params.get('id') || 'business-id',
-    name: params.get('name') || 'Sarah\'s Hair Studio',
-    type: params.get('type') || 'Hair & Beauty · Manchester',
-    color: params.get('color') || '#2D8EFF',
-    logo: params.get('logo') || '',
-    services: params.get('services') ? JSON.parse(decodeURIComponent(params.get('services'))) : [],
-    team: params.get('team') ? JSON.parse(decodeURIComponent(params.get('team'))) : [],
-    email: params.get('email') || 'hello@sarahshair.com',
-    phone: params.get('phone') || '+44 161 234 5678',
-    address: params.get('address') || '123 Main St, Manchester, UK'
-  };
-}
+// Initialize Supabase client
+const { createClient } = window.supabase;
+const supabase = createClient(
+  'https://your-project.supabase.co', // This will be replaced by build process
+  'your-anon-key' // This will be replaced by build process
+);
 
-// Business data from URL
-const dashboardData = getDashboardParams();
+// Load real dashboard data from API
+async function loadDashboard() {
+  try {
+    // Check if user is authenticated with Supabase
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      window.location.href = '/login';
+      return;
+    }
+
+    const response = await fetch('/api/get-dashboard', {
+      headers: { 
+        'Authorization': 'Bearer ' + session.access_token 
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        window.location.href = '/login';
+        return;
+      }
+      throw new Error('Failed to load dashboard data');
+    }
+
+    const data = await response.json();
+    populateDashboard(data);
+    
+  } catch (error) {
+    console.error('Dashboard loading error:', error);
+    alert('Failed to load dashboard. Please try refreshing the page.');
+  }
+}
 
 // Helper function to get initials
 function initials(name) {
   return name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2);
 }
 
-// Populate dashboard with business data
-function populateDashboard() {
-  console.log('populateDashboard called with data:', dashboardData);
+// Populate dashboard with real API data
+function populateDashboard(data) {
+  console.log('populateDashboard called with data:', data);
   
-  if (dashboardData.name && dashboardData.name !== 'Sarah\'s Hair Studio') {
-    try {
-      // Update sidebar business info
-      const bizNameEl = document.querySelector('.sb-biz-name');
-      const bizTypeEl = document.querySelector('.sb-biz-sub');
-      const greetingEl = document.querySelector('.tb-greeting');
-      const shareUrlEl = document.querySelector('.share-url');
-      
-      if (bizNameEl) bizNameEl.textContent = dashboardData.name;
-      if (bizTypeEl) bizTypeEl.textContent = dashboardData.type;
-      if (greetingEl) greetingEl.textContent = `Good morning, ${dashboardData.name.split(' ')[0]} 👋`;
-      if (shareUrlEl) shareUrlEl.textContent = `showup.io/book/${dashboardData.id || 'business-id'}`;
+  const { business, bookings, services, team, customers, stats } = data;
+  
+  try {
+    // Update sidebar business info
+    const bizNameEl = document.querySelector('.sb-biz-name');
+    const bizTypeEl = document.querySelector('.sb-biz-sub');
+    const greetingEl = document.querySelector('.tb-greeting');
+    const shareUrlEl = document.querySelector('.share-url');
+    
+    if (bizNameEl) bizNameEl.textContent = business.name;
+    if (bizTypeEl) bizTypeEl.textContent = `${business.type} · ${business.address?.split(',')[1] || 'Location'}`;
+    if (greetingEl) greetingEl.textContent = `Good morning, ${business.name.split(' ')[0]}  `;
+    if (shareUrlEl) shareUrlEl.textContent = `app.showupmedia.org/book/${business.slug}`;
       
       // Update icon with business initial or logo
-      const icon = document.querySelector('.sb-biz-icon');
-      if (icon) {
-        if (dashboardData.logo) {
-          icon.innerHTML = `<img src="${dashboardData.logo}" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">`;
-        } else {
-          icon.textContent = initials(dashboardData.name);
-          icon.style.background = dashboardData.color;
-        }
+    const icon = document.querySelector('.sb-biz-icon');
+    if (icon) {
+      if (business.logo) {
+        icon.innerHTML = `<img src="${business.logo}" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">`;
+      } else {
+        icon.textContent = initials(business.name);
+        icon.style.background = business.color;
       }
-      
-      // Update brand color
-      document.documentElement.style.setProperty('--accent', dashboardData.color);
-      
-      console.log('Dashboard populated successfully');
-    } catch (error) {
-      console.error('Error populating dashboard:', error);
     }
-  } else {
-    console.log('Using default dashboard data');
+    
+    // Update brand color
+    document.documentElement.style.setProperty('--accent', business.color);
+    
+    // Update stats
+    updateStats(stats);
+    
+    // Update bookings list
+    updateBookingsList(bookings);
+    
+    console.log('Dashboard populated successfully');
+  } catch (error) {
+    console.error('Error populating dashboard:', error);
   }
+}
+
+// Update stats display
+function updateStats(stats) {
+  const elements = {
+    '.stat-pending .stat-value': stats.pending || 0,
+    '.stat-confirmed .stat-value': stats.confirmed || 0,
+    '.stat-today .stat-value': stats.today || 0,
+    '.stat-revenue .stat-value': '£' + (stats.totalRevenue || 0).toFixed(0),
+    '.stat-month-revenue .stat-value': '£' + (stats.monthRevenue || 0).toFixed(0),
+    '.stat-customers .stat-value': stats.totalCustomers || 0
+  };
+  
+  Object.entries(elements).forEach(([selector, value]) => {
+    const el = document.querySelector(selector);
+    if (el) el.textContent = value;
+  });
+}
+
+// Update bookings list
+function updateBookingsList(bookings) {
+  const container = document.querySelector('.bookings-list');
+  if (!container || !bookings) return;
+  
+  container.innerHTML = bookings.slice(0, 10).map(booking => `
+    <div class="booking-item status-${booking.status}">
+      <div class="booking-info">
+        <div class="booking-name">${booking.customer_name}</div>
+        <div class="booking-service">${booking.service_name}</div>
+      </div>
+      <div class="booking-time">${booking.booked_date} at ${booking.booked_time}</div>
+      <div class="booking-status">${booking.status}</div>
+    </div>
+  `).join('');
 }
 
 // Initialize dashboard when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('Dashboard DOM loaded, calling populateDashboard');
-  populateDashboard();
+  console.log('Dashboard DOM loaded, calling loadDashboard');
+  loadDashboard();
 });
 
 const rev = [680,920,540,1100,860,1380,990,1240];

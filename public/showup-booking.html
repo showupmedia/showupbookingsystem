@@ -371,95 +371,108 @@
 </div>
 
 <script>
-// Get URL parameters
-function getUrlParams() {
-  const params = new URLSearchParams(window.location.search);
-  console.log('=== BOOKING PAGE URL PARAMETERS ===');
-  console.log('Full URL:', window.location.href);
-  console.log('Search string:', window.location.search);
-  console.log('Raw params:', Object.fromEntries(params.entries()));
-  
-  const businessData = {
-    name: params.get('name') || 'Sarah\'s Hair Studio',
-    type: params.get('type') || 'Hair & Beauty · Manchester',
-    color: params.get('color') || '#2D8EFF',
-    logo: params.get('logo') || '',
-    services: params.get('services') ? JSON.parse(decodeURIComponent(params.get('services'))) : [],
-    team: params.get('team') ? JSON.parse(decodeURIComponent(params.get('team'))) : []
-  };
-  
-  console.log('Parsed business data:', businessData);
-  return businessData;
-}
+// Load business data from API
+let businessData = null;
+let services = [];
+let team = [];
+let availability = [];
 
-// Business data from URL
-const businessData = getUrlParams();
+async function loadBusinessData() {
+  try {
+    // Get slug from URL: /book/my-business-slug
+    const slug = window.location.pathname.split('/book/')[1]
+      || new URLSearchParams(window.location.search).get('slug');
+    
+    if (!slug) {
+      throw new Error('Business slug not found in URL');
+    }
+
+    const response = await fetch(`/api/get-business?slug=${slug}`);
+    
+    if (!response.ok) {
+      throw new Error('Business not found');
+    }
+    
+    const data = await response.json();
+    businessData = data.business;
+    services = data.services;
+    team = data.team;
+    availability = data.availability;
+    
+    populateBusinessData();
+    populateServices();
+    populateTeam();
+    
+  } catch (error) {
+    console.error('Failed to load business data:', error);
+    alert('Business not found. Please check the URL and try again.');
+  }
+}
 
 // Initialize Stripe
 const stripe = Stripe('pk_test_51234567890abcdef'); // Use test key for development
 const elements = stripe.elements();
 
-// Populate business data when page loads
+// Load business data when page loads
 document.addEventListener('DOMContentLoaded', function() {
-  populateBusinessData();
+  loadBusinessData();
 });
 
-// Populate business data from URL parameters
+// Populate business data from API
 function populateBusinessData() {
+  if (!businessData) return;
+  
   console.log('populateBusinessData called with:', businessData);
   
-  // Only populate if we have actual business data (not defaults)
-  if (businessData.name && businessData.name !== 'Sarah\'s Hair Studio') {
-    console.log('Updating with real business data');
-    
-    // Update business header
-    document.querySelector('.biz-name').textContent = businessData.name;
-    document.querySelector('.biz-type').textContent = businessData.type;
-    
-    // Update logo
-    const logoEl = document.querySelector('.biz-logo');
-    if (businessData.logo) {
-      logoEl.innerHTML = `<img src="${businessData.logo}" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">`;
-    } else {
-      logoEl.textContent = initials(businessData.name);
-      logoEl.style.background = businessData.color;
-    }
-    
-    // Update brand color
-    document.documentElement.style.setProperty('--accent', businessData.color);
-    
-    // Only update services if we have custom services
-    if (businessData.services && businessData.services.length > 0) {
-      const servicesContainer = document.querySelector('.service-list');
-      if (servicesContainer) {
-        servicesContainer.innerHTML = businessData.services.map(service => `
-          <div class="service-item" onclick="selectService(this, '${service.name}', ${service.duration}, ${service.price})">
-            <div class="svc-icon">${getServiceIcon(service.name)}</div>
-            <div class="svc-info">
-              <div class="svc-name">${service.name}</div>
-              <div class="svc-meta">${service.duration} mins${service.desc ? ' · ' + service.desc : ''}</div>
-            </div>
-            <div class="svc-price">£${service.price.toFixed(2)}</div>
-            <div class="svc-check"></div>
-          </div>
-        `).join('');
-      }
-    }
-    
-    // Only update team if we have custom team members
-    if (businessData.team && businessData.team.length > 0) {
-      const staffContainer = document.querySelector('.staff-grid');
-      if (staffContainer) {
-        staffContainer.innerHTML = businessData.team.map(member => `
-          <div class="staff-item" onclick="selectStaff(this, '${member.name}')">
-            <div class="staff-avatar" style="background:${businessData.color}">${initials(member.name)}</div>
-            <div class="staff-name">${member.name.split(' ')[0]}</div>
-          </div>
-        `).join('');
-      }
-    }
+  // Update business header
+  document.querySelector('.biz-name').textContent = businessData.name;
+  document.querySelector('.biz-type').textContent = businessData.type;
+  
+  // Update logo
+  const logoEl = document.querySelector('.biz-logo');
+  if (businessData.logo_url) {
+    logoEl.innerHTML = `<img src="${businessData.logo_url}" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">`;
   } else {
-    console.log('Using default booking data');
+    logoEl.textContent = initials(businessData.name);
+    logoEl.style.background = businessData.color;
+  }
+  
+  // Update brand color
+  document.documentElement.style.setProperty('--accent', businessData.color);
+}
+
+// Populate services from API data
+function populateServices() {
+  if (!services || services.length === 0) return;
+  
+  const servicesContainer = document.querySelector('.service-list');
+  if (servicesContainer) {
+    servicesContainer.innerHTML = services.map(service => `
+      <div class="service-item" onclick="selectService(this, '${service.name}', ${service.duration_mins}, ${service.price})">
+        <div class="svc-icon">${getServiceIcon(service.name)}</div>
+        <div class="svc-info">
+          <div class="svc-name">${service.name}</div>
+          <div class="svc-meta">${service.duration_mins} mins${service.description ? ' · ' + service.description : ''}</div>
+        </div>
+        <div class="svc-price">£${service.price.toFixed(2)}</div>
+        <div class="svc-check"></div>
+      </div>
+    `).join('');
+  }
+}
+
+// Populate team members from API data
+function populateTeam() {
+  if (!team || team.length === 0) return;
+  
+  const staffContainer = document.querySelector('.staff-grid');
+  if (staffContainer) {
+    staffContainer.innerHTML = team.map(member => `
+      <div class="staff-item" onclick="selectStaff(this, '${member.name}')">
+        <div class="staff-avatar" style="background:${businessData.color}">${initials(member.name)}</div>
+        <div class="staff-name">${member.name.split(' ')[0]}</div>
+      </div>
+    `).join('');
   }
 }
 
@@ -617,28 +630,24 @@ async function submitBooking() {
   btn.textContent = 'Submitting...';
   
   try {
+    // Get slug from URL: /book/my-business-slug
+    const slug = window.location.pathname.split('/book/')[1]
+      || new URLSearchParams(window.location.search).get('slug');
+
     const bookingData = {
-      businessId: businessData.id || 'test-business-id',
+      businessSlug: slug,
       serviceId: selectedService?.id || '1',
-      serviceName: selectedService?.name || 'Test Service',
-      staffId: selectedStaff?.id || null,
-      staffName: selectedStaff?.name || 'Any available',
-      date: selectedDate,
-      time: selectedTime,
-      duration: selectedService?.duration || 60,
-      price: selectedService?.price || 50,
-      clientName: document.getElementById('clientName').value,
-      clientEmail: document.getElementById('clientEmail').value,
-      clientPhone: document.getElementById('clientPhone').value,
-      clientNotes: document.getElementById('clientNotes').value,
+      teamMemberId: selectedStaff?.id || null,
+      customerName: document.getElementById('clientName').value,
+      customerEmail: document.getElementById('clientEmail').value,
+      customerPhone: document.getElementById('clientPhone').value,
+      customerNotes: document.getElementById('clientNotes').value,
+      bookedDate: selectedDate,
+      bookedTime: selectedTime,
       paymentMethod: document.querySelector('input[name="paymentMethod"]:checked').value,
-      businessName: businessData.name || 'Test Business',
-      businessEmail: businessData.email || 'test@example.com',
-      businessPhone: businessData.phone || '+44 161 234 5678',
-      businessAddress: businessData.address || '123 Main St, Manchester, UK'
     };
     
-    const response = await fetch('/api/bookings', {
+    const response = await fetch('/api/create-booking', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -649,10 +658,10 @@ async function submitBooking() {
     const data = await response.json();
     
     if (response.ok) {
-      // Update confirmation screen
-      document.getElementById('confirmService').textContent = data.serviceName;
-      document.getElementById('confirmDate').textContent = formatDate(data.date);
-      document.getElementById('confirmTime').textContent = data.time;
+      // Update confirmation screen with actual booking data
+      document.getElementById('confirmService').textContent = selectedService?.name || 'Service';
+      document.getElementById('confirmDate').textContent = formatDate(selectedDate);
+      document.getElementById('confirmTime').textContent = selectedTime;
       
       // Show confirmation
       goPanel(5);
